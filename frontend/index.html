@@ -340,7 +340,7 @@
             handleAsyncOperation(async () => {
                 showMessage(retrieveResult, 'Searching...');
                 try {
-                    const response = await fetch(`/find_file/${code}`);
+                    const response = await fetch(`${API_BASE_URL}/find_file/${code}`);
                     if (!response.ok) throw new Error('Code not found. Please check and try again.');
                     const data = await response.json();
                     hideLoader();
@@ -404,7 +404,7 @@
                 if (formData.get('file')?.name) {
                     showMessage(uploadResult, 'Uploading file...');
                     try {
-                        const response = await fetch('/upload', { method: 'POST', body: formData });
+                        const response = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData });
                         if (!response.ok) throw new Error('File upload failed!');
                         const data = await response.json();
                         hideLoader();
@@ -421,7 +421,7 @@
 
                 showMessage(uploadResult, 'Generating code...');
                 try {
-                    const response = await fetch('/upload', { method: 'POST', body: formData });
+                    const response = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData });
                     if (!response.ok) throw new Error('Upload failed!');
                     const data = await response.json();
                     
@@ -448,7 +448,7 @@
             showMessage(uploadResult, 'Updating snippet...');
 
             try {
-                const response = await fetch(`/update/${currentCode}`, {
+                const response = await fetch(`${API_BASE_URL}/update/${currentCode}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ content: newText })
