@@ -361,11 +361,12 @@
                         contentView.appendChild(pre);
                     } else {
                         const downloadBtn = document.createElement('a');
-                        downloadBtn.href = `/get/${data.filename}`;
+                        // ✅ FIXED: Added API_BASE_URL to the download link
+                        downloadBtn.href = `${API_BASE_URL}/get/${data.filename}`;
                         downloadBtn.textContent = 'Download File';
                         downloadBtn.setAttribute('download', '');
                         downloadBtn.classList.add('button');
-                        contentView.innerHTML = '<h1>File Ready for Download</h1>';
+                        contentView.innerHTML = `<h1>File Ready for Download</h1><p style="margin-bottom: 20px;">File: <strong>${data.filename}</strong></p>`;
                         contentView.appendChild(downloadBtn);
                     }
                     const backBtn = document.createElement('button');
@@ -408,8 +409,10 @@
                         if (!response.ok) throw new Error('File upload failed!');
                         const data = await response.json();
                         hideLoader();
-                        const viewUrl = `/view/${data.code}`;
-                        const successMessage = `<p>File upload success! Your code is:</p><h2 style="letter-spacing: 2px;">${data.code}</h2><a href="/view/${data.code}" target="_blank">Open Sharable Link</a>`;
+                        // ✅ FIXED: Added API_BASE_URL to the view link
+                        const fileName = formData.get('file').name;
+                        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
+                        const successMessage = `<p>File '<strong>${fileName}</strong>' uploaded successfully! Your code is:</p><h2 style="letter-spacing: 2px;">${data.code}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
                         showMessage(uploadResult, successMessage);
                         uploadForm.reset();
                         dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
@@ -432,7 +435,8 @@
                     updateBtn.disabled = true;
                     dropZone.classList.add('hidden');
 
-                    const viewUrl = `/view/${currentCode}`;
+                    // ✅ FIXED: Added API_BASE_URL to the view link
+                    const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
                     const successMessage = `<p>Success! Your share code is:</p><h2 style="letter-spacing: 2px;">${currentCode}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
                     showMessage(uploadResult, successMessage);
 
@@ -458,7 +462,8 @@
                 originalText = newText;
                 updateBtn.disabled = true;
                 
-                const viewUrl = `/view/${currentCode}`;
+                // ✅ FIXED: Added API_BASE_URL to the view link
+                const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
                 const successMessage = `<p>Snippet updated successfully! Your code is:</p><h2 style="letter-spacing: 2px;">${currentCode}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
                 showMessage(uploadResult, successMessage);
 

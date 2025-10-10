@@ -32,7 +32,7 @@ app.add_middleware(
 # Configuration
 UPLOAD_DIRECTORY = "uploads"
 CODE_LENGTH = 6
-EXPIRATION_SECONDS = 24 * 60 * 60  # 24 hours
+EXPIRATION_SECONDS = 12 * 60 * 60  # 12 hours
 
 # Create the upload directory if it doesn't exist
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
