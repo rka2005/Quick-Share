@@ -2,17 +2,24 @@ import os
 import string
 import random
 import html
-import time # ✨ ADD THIS IMPORT
+import time
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi.middleware.cors import CORSMiddleware
 
+# Initialize the app only ONCE.
 app = FastAPI()
 
-origins = ["*"] # Allows any frontend to connect
+# Updated origins list as requested.
+# This tells the browser which frontend URLs are allowed to make requests to this backend.
+origins = [
+    "http://localhost:5500",          # For local testing
+    "http://127.0.0.1:5500",         # For local testing
+    "https://quick-share-xwhs.onrender.com", # Added as requested
+    "*"                               # Wildcard for easy development
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,7 +37,7 @@ EXPIRATION_SECONDS = 24 * 60 * 60  # 24 hours
 # Create the upload directory if it doesn't exist
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
-app = FastAPI()
+# This was the duplicate app = FastAPI() line that has been removed.
 
 class TextItem(BaseModel):
     content: str
@@ -79,8 +86,14 @@ def generate_unique_code():
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main HTML page."""
-    with open("index.html", "r", encoding="utf-8") as f:
-        return HTMLResponse(content=f.read())
+    # This assumes an index.html file exists in the same directory.
+    # On Render, you may need to ensure this file is present.
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Welcome to Quick Share</h1><p>index.html not found.</p>", status_code=404)
+
 
 @app.post("/upload")
 async def create_upload(text_content: str = Form(None), file: UploadFile = File(None)):
@@ -117,7 +130,7 @@ async def update_text(code: str, item: TextItem):
         raise HTTPException(status_code=404, detail="Code not found or is not a text snippet.")
 
     normalized_content = item.content.replace('\r\n', '\n').replace('\r', '\n')
-    
+
     with open(file_path, "w", encoding="utf-8") as buffer:
         buffer.write(normalized_content)
 
@@ -138,7 +151,7 @@ async def find_file_by_code(code: str):
 
     if not found_filename:
         raise HTTPException(status_code=404, detail="Code not found.")
-    
+
     file_path = os.path.join(UPLOAD_DIRECTORY, found_filename)
 
     if found_filename.endswith(".txt"):
@@ -165,7 +178,7 @@ async def view_shared_content(code: str):
         raise HTTPException(status_code=404, detail="Code not found.")
 
     file_path = os.path.join(UPLOAD_DIRECTORY, found_filename)
-    
+
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
