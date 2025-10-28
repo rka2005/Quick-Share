@@ -1,0 +1,147 @@
+:root {
+            --bg-color: #f4f6fa;
+            --card-bg: #ffffff;
+            --primary-color: #0052cc;
+            --primary-hover: #0041a3;
+            --secondary-color: #6c757d;
+            --secondary-hover: #5a6268;
+            --text-color: #172b4d;
+            --subtle-text: #5e6c84;
+            --border-color: #dfe1e6;
+            --success-color: #00875a;
+            --error-color: #de350b;
+            --success-bg: #e6fffa;
+            --error-bg: #ffebe6;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+
+        /* ✨ --- 1. DARK THEME COLOR DEFINITIONS --- ✨ */
+        body.dark-theme {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #e2e8f0;
+            --subtle-text: #94a3b8;
+            --border-color: #334155;
+            --primary-color: #38bdf8;
+            --primary-hover: #7dd3fc;
+            --success-color: #34d399;
+            --error-color: #f87171;
+            --success-bg: #052e16;
+            --error-bg: #450a0a;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+
+        /* ✨ --- 1. CSS FOR THE LOADER CONTAINER & ANIMATION --- ✨ */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+        
+        .book, .book__pg-shadow, .book__pg { animation: cover 5s ease-in-out infinite; }
+        .book { background-color: hsl(268, 90%, 65%); border-radius: 0.25em; box-shadow: 0 0.25em 0.5em hsla(0, 0%, 0%, 0.3), 0 0 0 0.25em hsl(278, 100%, 57%) inset; padding: 0.25em; perspective: 37.5em; position: relative; width: 8em; height: 6em; transform: translate3d(0, 0, 0); transform-style: preserve-3d; }
+        .book__pg-shadow, .book__pg { position: absolute; left: 0.25em; width: calc(50% - 0.25em); }
+        .book__pg-shadow { animation-name: shadow; background-image: linear-gradient( -45deg, hsla(0, 0%, 0%, 0) 50%, hsla(0, 0%, 0%, 0.3) 50% ); filter: blur(0.25em); top: calc(100% - 0.25em); height: 3.75em; transform: scaleY(0); transform-origin: 100% 0%; }
+        .book__pg { animation-name: pg1; background-color: hsl(223, 10%, 100%); background-image: linear-gradient( 90deg, hsla(223, 10%, 90%, 0) 87.5%, hsl(223, 10%, 90%) ); height: calc(100% - 0.5em); transform-origin: 100% 50%; }
+        .book__pg--2, .book__pg--3, .book__pg--4 { background-image: repeating-linear-gradient( hsl(223, 10%, 10%) 0 0.125em, hsla(223, 10%, 10%, 0) 0.125em 0.5em ), linear-gradient(90deg, hsla(223, 10%, 90%, 0) 87.5%, hsl(223, 10%, 90%)); background-repeat: no-repeat; background-position: center; background-size: 2.5em 4.125em, 100% 100%; }
+        .book__pg--2 { animation-name: pg2; }
+        .book__pg--3 { animation-name: pg3; }
+        .book__pg--4 { animation-name: pg4; }
+        .book__pg--5 { animation-name: pg5; }
+        @keyframes cover { from, 5%, 45%, 55%, 95%, to { animation-timing-function: ease-out; background-color: hsl(278, 84%, 67%); } 10%, 40%, 60%, 90% { animation-timing-function: ease-in; background-color: hsl(271, 90%, 45%); } }
+        @keyframes shadow { from, 10.01%, 20.01%, 30.01%, 40.01% { animation-timing-function: ease-in; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0); } 5%, 15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95% { animation-timing-function: ease-out; transform: translate3d(0, 0, 1px) scaleY(0.2) rotateY(90deg); } 10%, 20%, 30%, 40%, 50%, to { animation-timing-function: ease-out; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg); } 50.01%, 60.01%, 70.01%, 80.01%, 90.01% { animation-timing-function: ease-in; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg); } 60%, 70%, 80%, 90%, to { animation-timing-function: ease-out; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0); } }
+        @keyframes pg1 { from, to { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.4deg); } 10%, 15% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(180deg); } 20%, 80% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(180deg); } 85%, 90% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(180deg); } }
+        @keyframes pg2 { from, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0.3deg); } 5%, 10% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.3deg); } 20%, 25% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.9deg); } 30%, 70% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(179.9deg); } 75%, 80% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.9deg); } 90%, 95% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.3deg); } }
+        @keyframes pg3 { from, 10%, 90%, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0.2deg); } 15%, 20% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.2deg); } 30%, 35% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.8deg); } 40%, 60% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(179.8deg); } 65%, 70% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.8deg); } 80%, 85% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.2deg); } }
+        @keyframes pg4 { from, 20%, 80%, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0.1deg); } 25%, 30% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.1deg); } 40%, 45% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.7deg); } 50% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(179.7deg); } 55%, 60% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.7deg); } 70%, 75% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.1deg); } }
+        @keyframes pg5 { from, 30%, 70%, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0); } 35%, 40% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0deg); } 50% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.6deg); } 60%, 65% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0); } }
+        
+        .container {
+            position: relative;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        /* --- ✨ 2. CSS FOR THE TOGGLE SWITCH & ITS CONTAINER --- ✨ */
+        .theme-switcher-container {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+        }
+        
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch #themeToggle { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2196f3; -webkit-transition: 0.4s; transition: 0.4s; z-index: 0; overflow: hidden; }
+        .sun-moon { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: yellow; -webkit-transition: 0.4s; transition: 0.4s; }
+        #themeToggle:checked + .slider { background-color: black; }
+        #themeToggle:focus + .slider { box-shadow: 0 0 1px #2196f3; }
+        #themeToggle:checked + .slider .sun-moon { -webkit-transform: translateX(26px); -ms-transform: translateX(26px); transform: translateX(26px); background-color: white; -webkit-animation: rotate-center 0.6s ease-in-out both; animation: rotate-center 0.6s ease-in-out both; }
+        .moon-dot { opacity: 0; transition: 0.4s; fill: gray; }
+        #themeToggle:checked + .slider .sun-moon .moon-dot { opacity: 1; }
+        .slider.round { border-radius: 34px; }
+        .slider.round .sun-moon { border-radius: 50%; }
+        #moon-dot-1 { left: 10px; top: 3px; position: absolute; width: 6px; height: 6px; z-index: 4; }
+        #moon-dot-2 { left: 2px; top: 10px; position: absolute; width: 10px; height: 10px; z-index: 4; }
+        #moon-dot-3 { left: 16px; top: 18px; position: absolute; width: 3px; height: 3px; z-index: 4; }
+        .stars { transform: translateY(-32px); opacity: 0; transition: 0.4s; }
+        .star { fill: white; position: absolute; -webkit-transition: 0.4s; transition: 0.4s; animation-name: star-twinkle; animation-duration: 2s; animation-iteration-count: infinite; }
+        #themeToggle:checked + .slider .stars { -webkit-transform: translateY(0); -ms-transform: translateY(0); transform: translateY(0); opacity: 1; }
+        #star-1 { width: 20px; top: 2px; left: 3px; animation-delay: 0.3s; }
+        #star-2 { width: 6px; top: 16px; left: 3px; }
+        #star-3 { width: 12px; top: 20px; left: 10px; animation-delay: 0.6s; }
+        #star-4 { width: 18px; top: 0px; left: 18px; animation-delay: 1.3s; }
+        @keyframes star-twinkle { 0% { transform: scale(1); } 40% { transform: scale(1.2); } 80% { transform: scale(0.8); } 100% { transform: scale(1); } }
+        @keyframes rotate-center { 0% { -webkit-transform: rotate(0) translateX(26px); transform: rotate(0) translateX(26px); } 100% { -webkit-transform: rotate(-360deg) translateX(26px); transform: rotate(-360deg) translateX(26px); } }
+        /* The rest of your original CSS is below... */
+        
+        .header { margin-bottom: 30px; }
+        .header h1 { font-size: 28px; margin: 0; }
+        .header p { color: var(--subtle-text); margin-top: 8px; }
+        button, .button { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease, transform 0.1s ease; background-color: var(--primary-color); color: white; display: inline-block; text-decoration: none; box-sizing: border-box; }
+        button:hover, .button:hover { background-color: var(--primary-hover); color: white; }
+        button:active, .button:active { transform: scale(0.98); }
+        .button-secondary { background-color: var(--secondary-color); }
+        .button-secondary:hover { background-color: var(--secondary-hover); }
+        .copy-button { margin-bottom: 15px; background-color: var(--success-color); }
+        .copy-button:hover { background-color: #006644; }
+        button:disabled { background-color: #a5adba; cursor: not-allowed; }
+        input[type="text"], textarea { width: 100%; padding: 14px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: 'Inter', sans-serif; background-color: var(--card-bg); color: var(--text-color); }
+        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent); }
+        .drop-zone { border: 2px dashed var(--border-color); border-radius: var(--border-radius); padding: 30px; margin-top: 20px; transition: background-color 0.2s ease, border-color 0.2s ease; }
+        .drop-zone.drag-over { border-color: var(--primary-color); background-color: color-mix(in srgb, var(--primary-color) 10%, transparent); }
+        .drop-zone p { margin: 0; color: var(--subtle-text); }
+        .section { border-top: 1px solid var(--border-color); padding-top: 20px; margin-top: 20px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; background-color: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: var(--border-radius); text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 14px; max-height: 400px; overflow-y: auto; }
+        .hidden { display: none; }
+        .result-message { padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: 500; }
+        .result-success { background-color: var(--success-bg); color: var(--success-color); }
+        .result-error { background-color: var(--error-bg); color: var(--error-color); }

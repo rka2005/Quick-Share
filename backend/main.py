@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, FileResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 
 # Initialize the app only ONCE.
 app = FastAPI()
@@ -119,6 +120,29 @@ async def create_upload(text_content: str = Form(None), file: UploadFile = File(
 
     raise HTTPException(status_code=400, detail="Invalid request.")
 
+@app.post("/upload_multiple")
+async def upload_multiple(files: List[UploadFile] = File(...)):
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+
+    code = generate_unique_code()
+    saved_files = []
+
+    for i, file in enumerate(files):
+        original_name = os.path.splitext(file.filename)[0]
+        ext = os.path.splitext(file.filename)[1]
+        numbered_filename = f"{code}_{i + 1}{ext}"
+        file_path = os.path.join(UPLOAD_DIRECTORY, numbered_filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+        saved_files.append(numbered_filename)
+
+    return {
+        "message": "Files uploaded successfully!",
+        "code": code,
+        "files": saved_files
+    }
+
 @app.put("/update/{code}")
 async def update_text(code: str, item: TextItem):
     """Finds a text file by its code and updates its content."""
@@ -140,9 +164,20 @@ async def update_text(code: str, item: TextItem):
 @app.get("/find_file/{code}")
 async def find_file_by_code(code: str):
     """
-    Finds a file by code, determines its type, and returns its content if it's text.
+    Finds a single file or a folder by code. 
+    If it's a folder, returns list of files.
     """
     code = code.upper()
+    folder_path = os.path.join(UPLOAD_DIRECTORY, code)
+
+    # --- Multiple files case ---
+    if os.path.isdir(folder_path):
+        files = os.listdir(folder_path)
+        if not files:
+            raise HTTPException(status_code=404, detail="No files found for this code.")
+        return {"type": "multiple", "files": files, "folder": code}
+
+    # --- Single file case ---
     found_filename = None
     for filename in os.listdir(UPLOAD_DIRECTORY):
         if filename.startswith(code):
@@ -166,8 +201,29 @@ async def find_file_by_code(code: str):
 
 @app.get("/view/{code}", response_class=HTMLResponse)
 async def view_shared_content(code: str):
-    """Finds content by code and displays it on a viewer page."""
     code = code.upper()
+    folder_path = os.path.join(UPLOAD_DIRECTORY, code)
+
+    # ✅ Multiple file case
+    if os.path.isdir(folder_path):
+        files = os.listdir(folder_path)
+        if not files:
+            raise HTTPException(status_code=404, detail="No files in folder.")
+        file_links = "".join(
+            [f"<li><a href='/get_multiple/{code}/{f}' target='_blank'>{f}</a></li>" for f in files]
+        )
+        html_content = f"""
+        <html>
+        <head><title>Shared Files</title></head>
+        <body style="font-family:Arial;">
+            <h2>📂 Files for code: {code}</h2>
+            <ul>{file_links}</ul>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content)
+
+    # ✅ Single file or text case
     found_filename = None
     for filename in os.listdir(UPLOAD_DIRECTORY):
         if filename.startswith(code):
@@ -179,37 +235,15 @@ async def view_shared_content(code: str):
 
     file_path = os.path.join(UPLOAD_DIRECTORY, found_filename)
 
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        content = f.read()
+    # Display text file content
+    if found_filename.endswith(".txt"):
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = html.escape(f.read())
+        return HTMLResponse(f"<pre>{content}</pre>")
 
-    escaped_content = html.escape(content)
+    # Other files: download link
+    return HTMLResponse(f"<a href='/get/{found_filename}'>Download {found_filename}</a>")
 
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Code Viewer</title>
-        <style>
-            body {{ font-family: sans-serif; background-color: #f4f7f6; margin: 0; }}
-            pre {{
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                background-color: #2b2b2b;
-                color: #f8f8f2;
-                padding: 25px;
-                border-radius: 8px;
-                margin: 20px;
-                font-family: Consolas, 'Courier New', monospace;
-                font-size: 14px;
-            }}
-        </style>
-    </head>
-    <body><pre>{escaped_content}</pre></body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
 
 @app.get("/get/{file_id}")
 async def get_shared_content(file_id: str):
@@ -218,3 +252,13 @@ async def get_shared_content(file_id: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Content not found.")
     return FileResponse(path=file_path)
+
+@app.get("/get_multiple/{code}/{filename}")
+async def get_file_from_folder(code: str, filename: str):
+    folder_path = os.path.join(UPLOAD_DIRECTORY, code)
+    file_path = os.path.join(folder_path, filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found.")
+
+    return FileResponse(path=file_path, filename=filename)
