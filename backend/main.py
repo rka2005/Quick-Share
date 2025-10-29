@@ -122,26 +122,42 @@ async def create_upload(text_content: str = Form(None), file: UploadFile = File(
 
 @app.post("/upload_multiple")
 async def upload_multiple(files: List[UploadFile] = File(...)):
+    """
+    Handles uploading multiple files.
+    Each batch of uploads is stored in a unique folder named after the generated code.
+    """
     if not files:
         raise HTTPException(status_code=400, detail="No files provided.")
 
     code = generate_unique_code()
+    folder_path = os.path.join(UPLOAD_DIRECTORY, code)
+    os.makedirs(folder_path, exist_ok=True)
+
     saved_files = []
 
-    for i, file in enumerate(files):
-        original_name = os.path.splitext(file.filename)[0]
-        ext = os.path.splitext(file.filename)[1]
-        numbered_filename = f"{code}_{i + 1}{ext}"
-        file_path = os.path.join(UPLOAD_DIRECTORY, numbered_filename)
+    for i, file in enumerate(files, start=1):
+        if not file.filename:
+            continue  # skip empty inputs
+
+        file_extension = os.path.splitext(file.filename)[1]
+        safe_name = os.path.basename(file.filename)
+        file_path = os.path.join(folder_path, safe_name)
+
+        # Save each file
         with open(file_path, "wb") as buffer:
             buffer.write(await file.read())
-        saved_files.append(numbered_filename)
+
+        saved_files.append(safe_name)
+
+    if not saved_files:
+        raise HTTPException(status_code=400, detail="No valid files uploaded.")
 
     return {
         "message": "Files uploaded successfully!",
         "code": code,
         "files": saved_files
     }
+
 
 @app.put("/update/{code}")
 async def update_text(code: str, item: TextItem):

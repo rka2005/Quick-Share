@@ -285,95 +285,121 @@
         });
         
         uploadForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const formData = new FormData(uploadForm);
-            
-            if (!formData.get('text_content') && !formData.get('file')?.name) {
-                showMessage(uploadResult, 'Please add text or a file to share.', true);
-                return;
-            }
-            
-            handleAsyncOperation(async () => {
-                // ✅ Multiple files
-                if (fileInput.files.length > 1) {
-                    showMessage(uploadResult, 'Uploading multiple files...');
-                    const multiFormData = new FormData();
-                    for (let i = 0; i < fileInput.files.length; i++) {
-                        multiFormData.append('files', fileInput.files[i]);
-                    }
+  event.preventDefault();
+  const formData = new FormData(uploadForm);
 
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/upload_multiple`, {
-                            method: 'POST',
-                            body: multiFormData,
-                        });
-                        if (!response.ok) throw new Error('Multiple file upload failed!');
-                        const data = await response.json();
-                        hideLoader();
+  if (!formData.get('text_content') && !formData.get('file')?.name) {
+    showMessage(uploadResult, 'Please add text or a file to share.', true);
+    return;
+  }
 
-                        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
-                        const fileList = data.files.map(f => `<li>${f}</li>`).join('');
-                        const successMessage = `
-                            <p>✅ Uploaded <strong>${data.files.length}</strong> files successfully! Your code is:</p>
-                            <h2 style="letter-spacing: 2px;">${data.code}</h2>
-                            <ul>${fileList}</ul>
-                            <a href="${viewUrl}" target="_blank">Open Sharable Link</a>
-                        `;
-                        showMessage(uploadResult, successMessage);
-                        uploadForm.reset();
-                        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
-                    } catch (error) {
-                        showMessage(uploadResult, error.message, true);
-                    }
-                    return;
-                }
+  handleAsyncOperation(async () => {
+    // ✅ Multiple files
+    if (fileInput.files.length > 1) {
+      showMessage(uploadResult, 'Uploading multiple files...');
+      const multiFormData = new FormData();
+      for (let i = 0; i < fileInput.files.length; i++) {
+        multiFormData.append('files', fileInput.files[i]);
+      }
 
-                // ✅ Single file
-                if (fileInput.files.length === 1) {
-                    showMessage(uploadResult, 'Uploading file...');
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData });
-                        if (!response.ok) throw new Error('File upload failed!');
-                        const data = await response.json();
-                        hideLoader();
-                        // ✅ FIXED: Added API_BASE_URL to the view link
-                        const fileName = formData.get('file').name;
-                        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
-                        const successMessage = `<p>File '<strong>${fileName}</strong>' uploaded successfully! Your code is:</p><h2 style="letter-spacing: 2px;">${data.code}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
-                        showMessage(uploadResult, successMessage);
-                        uploadForm.reset();
-                        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
-                    } catch (error) {
-                        showMessage(uploadResult, error.message, true);
-                    }
-                    return;
-                }
-
-                showMessage(uploadResult, 'Generating code...');
-                try {
-                    const response = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData });
-                    if (!response.ok) throw new Error('File upload failed!');
-                    const data = await response.json();
-
-                    hideLoader();
-                    
-                    currentCode = data.code;
-                    originalText = textContent.value;
-                    generateBtn.classList.add('hidden');
-                    updateBtn.classList.remove('hidden');
-                    updateBtn.disabled = true;
-                    dropZone.classList.add('hidden');
-
-                    // ✅ FIXED: Added API_BASE_URL to the view link
-                    const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
-                    const successMessage = `<p>Success! Your share code is:</p><h2 style="letter-spacing: 2px;">${currentCode}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
-                    showMessage(uploadResult, successMessage);
-
-                } catch (error) {
-                    showMessage(uploadResult, error.message, true);
-                }
-            });
+      try {
+        const res = await fetch(`${API_BASE_URL}/upload_multiple`, {
+          method: 'POST',
+          body: multiFormData,
         });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Multiple file upload failed: ${errorText}`);
+        }
+
+        const data = await res.json();
+        hideLoader();
+
+        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
+        const fileList = data.files.map(f => `<li>${f}</li>`).join('');
+
+        const successMessage = `
+          <p>✅ Uploaded <strong>${data.files.length}</strong> files successfully!</p>
+          <p>Your share code:</p>
+          <h2 style="letter-spacing: 2px;">${data.code}</h2>
+          <ul>${fileList}</ul>
+          <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
+        `;
+        showMessage(uploadResult, successMessage);
+
+        uploadForm.reset();
+        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+      } catch (error) {
+        console.error(error);
+        showMessage(uploadResult, error.message, true);
+      }
+      return;
+    }
+
+    // ✅ Single file upload
+    if (fileInput.files.length === 1) {
+      showMessage(uploadResult, 'Uploading file...');
+      try {
+        const res = await fetch(`${API_BASE_URL}/upload`, {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) throw new Error('File upload failed!');
+
+        const data = await res.json();
+        hideLoader();
+
+        const fileName = formData.get('file').name;
+        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
+        const successMessage = `
+          <p>✅ File '<strong>${fileName}</strong>' uploaded successfully!</p>
+          <p>Your share code:</p>
+          <h2 style="letter-spacing: 2px;">${data.code}</h2>
+          <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
+        `;
+        showMessage(uploadResult, successMessage);
+
+        uploadForm.reset();
+        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+      } catch (error) {
+        showMessage(uploadResult, error.message, true);
+      }
+      return;
+    }
+
+    // ✅ Text-only upload
+    showMessage(uploadResult, 'Generating code...');
+    try {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error('Text upload failed!');
+
+      const data = await res.json();
+      hideLoader();
+
+      currentCode = data.code;
+      originalText = textContent.value;
+      generateBtn.classList.add('hidden');
+      updateBtn.classList.remove('hidden');
+      updateBtn.disabled = true;
+      dropZone.classList.add('hidden');
+
+      const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
+      const successMessage = `
+        <p>✅ Success! Your share code is:</p>
+        <h2 style="letter-spacing: 2px;">${currentCode}</h2>
+        <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
+      `;
+      showMessage(uploadResult, successMessage);
+    } catch (error) {
+      showMessage(uploadResult, error.message, true);
+    }
+  });
+});
+
         
         updateBtn.addEventListener('click', async () => {
             if (!currentCode || updateBtn.disabled) return;
