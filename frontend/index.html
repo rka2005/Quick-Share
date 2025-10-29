@@ -263,29 +263,95 @@
                                 card.appendChild(fileIcon);
                             }
 
-                            const fileLink = document.createElement('a');
-                            fileLink.href = fileUrl;
-                            fileLink.textContent = f;
-                            fileLink.target = "_blank";
-                            fileLink.style.display = "block";
-                            fileLink.style.marginTop = "8px";
-                            fileLink.style.color = "var(--accent-color)";
-                            fileLink.style.textDecoration = "none";
-                            fileLink.onmouseenter = () => fileLink.style.textDecoration = "underline";
-                            fileLink.onmouseleave = () => fileLink.style.textDecoration = "none";
+                            // Preview button
+                            const previewBtn = document.createElement('button');
+                            previewBtn.textContent = '👁️ Preview';
+                            previewBtn.className = 'button';
+                            previewBtn.style.marginTop = "8px";
+                            previewBtn.style.marginRight = "4px";
+                            previewBtn.style.fontSize = "0.9em";
+                            previewBtn.onclick = () => {
+                                // Clear the content view and show preview
+                                contentView.innerHTML = `<h1>File Preview</h1><p><strong>${f}</strong></p>`;
+                                
+                                if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+                                    const img = document.createElement('img');
+                                    img.src = fileUrl;
+                                    img.style.maxWidth = "100%";
+                                    img.style.borderRadius = "10px";
+                                    img.style.marginBottom = "20px";
+                                    contentView.appendChild(img);
+                                } else if (ext === "pdf") {
+                                    const embed = document.createElement('embed');
+                                    embed.src = fileUrl;
+                                    embed.type = "application/pdf";
+                                    embed.width = "100%";
+                                    embed.height = "500px";
+                                    contentView.appendChild(embed);
+                                } else if (["txt", "md"].includes(ext)) {
+                                    fetch(fileUrl).then(res => res.text()).then(text => {
+                                        const pre = document.createElement('pre');
+                                        pre.textContent = text;
+                                        pre.style.background = "#f8f8f8";
+                                        pre.style.padding = "10px";
+                                        pre.style.borderRadius = "8px";
+                                        contentView.appendChild(pre);
+                                    });
+                                } else {
+                                    const info = document.createElement('p');
+                                    info.textContent = "Preview not available for this file type.";
+                                    contentView.appendChild(info);
+                                }
 
-                            card.appendChild(fileLink);
+                                // Add download button
+                                const dlBtn = document.createElement('a');
+                                dlBtn.href = fileUrl;
+                                dlBtn.textContent = 'Download File';
+                                dlBtn.setAttribute('download', f);
+                                dlBtn.classList.add('button');
+                                dlBtn.style.marginTop = "15px";
+                                contentView.appendChild(dlBtn);
+
+                                // Add back button to return to grid view
+                                const backToGridBtn = document.createElement('button');
+                                backToGridBtn.textContent = 'Back to Files';
+                                backToGridBtn.className = 'button button-secondary';
+                                backToGridBtn.style.marginTop = '20px';
+                                backToGridBtn.style.marginLeft = '10px';
+                                backToGridBtn.onclick = () => {
+                                    contentView.innerHTML = `<h1>📁 Files for Code: ${code}</h1>`;
+                                    contentView.appendChild(grid);
+                                    contentView.appendChild(fullView);
+                                    contentView.appendChild(backBtn);
+                                };
+                                contentView.appendChild(backToGridBtn);
+                            };
+                            
+                            // Download button
+                            const downloadBtn = document.createElement('a');
+                            downloadBtn.href = fileUrl;
+                            downloadBtn.textContent = '⬇️ Download';
+                            downloadBtn.setAttribute('download', f);
+                            downloadBtn.className = 'button button-secondary';
+                            downloadBtn.style.marginTop = "8px";
+                            downloadBtn.style.fontSize = "0.9em";
+                            
+                            // Filename display
+                            const fileName = document.createElement('div');
+                            fileName.textContent = f;
+                            fileName.style.marginTop = "8px";
+                            fileName.style.color = "var(--accent-color)";
+                            fileName.style.overflow = "hidden";
+                            fileName.style.textOverflow = "ellipsis";
+                            fileName.style.whiteSpace = "nowrap";
+                            
+                            card.appendChild(fileName);
+                            card.appendChild(previewBtn);
+                            card.appendChild(downloadBtn);
                             grid.appendChild(card);
                         }
 
                         contentView.appendChild(grid);
-
-                        const fullView = document.createElement('a');
-                        fullView.href = `${API_BASE_URL}/view/${code}`;
-                        fullView.textContent = "🔗 Open Full View";
-                        fullView.className = "button";
-                        fullView.style.marginTop = "20px";
-                        contentView.appendChild(fullView);
 
                         const backBtn = document.createElement('button');
                         backBtn.textContent = 'Share or Get Another';
