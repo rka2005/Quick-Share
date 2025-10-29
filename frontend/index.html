@@ -228,7 +228,7 @@
                             card.onmouseenter = () => (card.style.transform = "scale(1.03)");
                             card.onmouseleave = () => (card.style.transform = "scale(1)");
 
-                            // 🧩 File preview logic — supports all file types
+                            // 🖼️ Show image preview if image
                             if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
                                 const img = document.createElement('img');
                                 img.src = fileUrl;
@@ -237,18 +237,9 @@
                                 img.style.borderRadius = "8px";
                                 img.style.marginBottom = "8px";
                                 card.appendChild(img);
-
-                            } else if (ext === "pdf") {
-                                const iframe = document.createElement('iframe');
-                                iframe.src = fileUrl;
-                                iframe.width = "100%";
-                                iframe.height = "300";
-                                iframe.style.border = "1px solid var(--glass-border)";
-                                iframe.style.borderRadius = "8px";
-                                iframe.style.marginBottom = "8px";
-                                card.appendChild(iframe);
-
-                            } else if (["txt", "md"].includes(ext)) {
+                            } 
+                            // 📄 For text/pdf files, show an icon or small preview
+                            else if (["txt", "md"].includes(ext)) {
                                 const res = await fetch(fileUrl);
                                 const text = await res.text();
                                 const snippet = document.createElement('pre');
@@ -262,25 +253,9 @@
                                 snippet.style.padding = "8px";
                                 snippet.style.borderRadius = "6px";
                                 card.appendChild(snippet);
-
-                            } else if (["mp4", "webm", "ogg"].includes(ext)) {
-                                const video = document.createElement('video');
-                                video.src = fileUrl;
-                                video.controls = true;
-                                video.width = 250;
-                                video.style.borderRadius = "8px";
-                                video.style.marginBottom = "8px";
-                                card.appendChild(video);
-
-                            } else if (["mp3", "wav", "ogg"].includes(ext)) {
-                                const audio = document.createElement('audio');
-                                audio.src = fileUrl;
-                                audio.controls = true;
-                                audio.style.width = "100%";
-                                audio.style.marginBottom = "8px";
-                                card.appendChild(audio);
-
-                            } else {
+                            } 
+                            // 📎 For other file types
+                            else {
                                 const fileIcon = document.createElement('div');
                                 fileIcon.textContent = "📎";
                                 fileIcon.style.fontSize = "32px";
