@@ -288,7 +288,7 @@
             event.preventDefault();
             const formData = new FormData(uploadForm);
             
-            if (!formData.get('text_content') && !formData.get('file') === 0) {
+            if (!formData.get('text_content') && !formData.get('file')?.name) {
                 showMessage(uploadResult, 'Please add text or a file to share.', true);
                 return;
             }
