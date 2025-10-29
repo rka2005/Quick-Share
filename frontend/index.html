@@ -202,6 +202,127 @@
                     const data = await response.json();
                     hideLoader();
                     showContentView();
+
+                    // 🧩 MULTIPLE FILES
+                    if (data.type === 'multiple') {
+                        contentView.innerHTML = `<h1>📁 Files for Code: ${code}</h1>`;
+
+                        const grid = document.createElement('div');
+                        grid.style.display = "grid";
+                        grid.style.gridTemplateColumns = "repeat(auto-fill, minmax(200px, 1fr))";
+                        grid.style.gap = "20px";
+                        grid.style.marginTop = "20px";
+
+                        for (const f of data.files) {
+                            const fileUrl = `${API_BASE_URL}/get_multiple/${code}/${f}`;
+                            const ext = f.split('.').pop().toLowerCase();
+
+                            const card = document.createElement('div');
+                            card.style.border = "1px solid var(--glass-border)";
+                            card.style.borderRadius = "12px";
+                            card.style.padding = "10px";
+                            card.style.textAlign = "center";
+                            card.style.background = "var(--glass-bg)";
+                            card.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
+                            card.style.transition = "transform 0.2s ease";
+                            card.onmouseenter = () => (card.style.transform = "scale(1.03)");
+                            card.onmouseleave = () => (card.style.transform = "scale(1)");
+
+                            // 🧩 File preview logic — supports all file types
+                            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+                                const img = document.createElement('img');
+                                img.src = fileUrl;
+                                img.alt = f;
+                                img.style.maxWidth = "100%";
+                                img.style.borderRadius = "8px";
+                                img.style.marginBottom = "8px";
+                                card.appendChild(img);
+
+                            } else if (ext === "pdf") {
+                                const iframe = document.createElement('iframe');
+                                iframe.src = fileUrl;
+                                iframe.width = "100%";
+                                iframe.height = "300";
+                                iframe.style.border = "1px solid var(--glass-border)";
+                                iframe.style.borderRadius = "8px";
+                                iframe.style.marginBottom = "8px";
+                                card.appendChild(iframe);
+
+                            } else if (["txt", "md"].includes(ext)) {
+                                const res = await fetch(fileUrl);
+                                const text = await res.text();
+                                const snippet = document.createElement('pre');
+                                snippet.textContent = text.slice(0, 200) + (text.length > 200 ? "..." : "");
+                                snippet.style.fontSize = "12px";
+                                snippet.style.textAlign = "left";
+                                snippet.style.whiteSpace = "pre-wrap";
+                                snippet.style.maxHeight = "120px";
+                                snippet.style.overflowY = "auto";
+                                snippet.style.background = "rgba(255,255,255,0.05)";
+                                snippet.style.padding = "8px";
+                                snippet.style.borderRadius = "6px";
+                                card.appendChild(snippet);
+
+                            } else if (["mp4", "webm", "ogg"].includes(ext)) {
+                                const video = document.createElement('video');
+                                video.src = fileUrl;
+                                video.controls = true;
+                                video.width = 250;
+                                video.style.borderRadius = "8px";
+                                video.style.marginBottom = "8px";
+                                card.appendChild(video);
+
+                            } else if (["mp3", "wav", "ogg"].includes(ext)) {
+                                const audio = document.createElement('audio');
+                                audio.src = fileUrl;
+                                audio.controls = true;
+                                audio.style.width = "100%";
+                                audio.style.marginBottom = "8px";
+                                card.appendChild(audio);
+
+                            } else {
+                                const fileIcon = document.createElement('div');
+                                fileIcon.textContent = "📎";
+                                fileIcon.style.fontSize = "32px";
+                                fileIcon.style.marginBottom = "8px";
+                                card.appendChild(fileIcon);
+                            }
+
+                            const fileLink = document.createElement('a');
+                            fileLink.href = fileUrl;
+                            fileLink.textContent = f;
+                            fileLink.target = "_blank";
+                            fileLink.style.display = "block";
+                            fileLink.style.marginTop = "8px";
+                            fileLink.style.color = "var(--accent-color)";
+                            fileLink.style.textDecoration = "none";
+                            fileLink.onmouseenter = () => fileLink.style.textDecoration = "underline";
+                            fileLink.onmouseleave = () => fileLink.style.textDecoration = "none";
+
+                            card.appendChild(fileLink);
+                            grid.appendChild(card);
+                        }
+
+                        contentView.appendChild(grid);
+
+                        const fullView = document.createElement('a');
+                        fullView.href = `${API_BASE_URL}/view/${code}`;
+                        fullView.textContent = "🔗 Open Full View";
+                        fullView.className = "button";
+                        fullView.style.marginTop = "20px";
+                        contentView.appendChild(fullView);
+
+                        const backBtn = document.createElement('button');
+                        backBtn.textContent = 'Share or Get Another';
+                        backBtn.className = 'button button-secondary';
+                        backBtn.style.marginTop = '20px';
+                        backBtn.onclick = showInitialView;
+                        contentView.appendChild(backBtn);
+
+                        return;
+                    }
+
+                    // 🧩 TEXT SNIPPET
                     if (data.type === 'text') {
                         const copyBtn = document.createElement('button');
                         copyBtn.textContent = 'Copy Text';
@@ -216,7 +337,10 @@
                         const pre = document.createElement('pre');
                         pre.textContent = data.content;
                         contentView.appendChild(pre);
-                    } else if (data.type === 'file') {
+                    }
+
+                    // 🧩 SINGLE FILE
+                    else if (data.type === 'file') {
                         const fileUrl = `${API_BASE_URL}/get/${data.filename}`;
                         const ext = data.filename.split('.').pop().toLowerCase();
 
@@ -260,13 +384,14 @@
                         contentView.appendChild(downloadBtn);
                     }
 
-                    // ✅ BACK BUTTON (same)
+                    // ✅ BACK BUTTON
                     const backBtn = document.createElement('button');
                     backBtn.textContent = 'Share or Get Another';
                     backBtn.className = 'button button-secondary';
                     backBtn.style.marginTop = '20px';
                     backBtn.onclick = showInitialView;
                     contentView.appendChild(backBtn);
+
                 } catch (error) {
                     showMessage(retrieveResult, error.message, true);
                 }
@@ -285,120 +410,120 @@
         });
         
         uploadForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const formData = new FormData(uploadForm);
+        event.preventDefault();
+        const formData = new FormData(uploadForm);
 
-  if (!formData.get('text_content') && !formData.get('file')?.name) {
-    showMessage(uploadResult, 'Please add text or a file to share.', true);
-    return;
-  }
-
-  handleAsyncOperation(async () => {
-    // ✅ Multiple files
-    if (fileInput.files.length > 1) {
-      showMessage(uploadResult, 'Uploading multiple files...');
-      const multiFormData = new FormData();
-      for (let i = 0; i < fileInput.files.length; i++) {
-        multiFormData.append('files', fileInput.files[i]);
-      }
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/upload_multiple`, {
-          method: 'POST',
-          body: multiFormData,
-        });
-
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error(`Multiple file upload failed: ${errorText}`);
+        if (!formData.get('text_content') && !formData.get('file')?.name) {
+            showMessage(uploadResult, 'Please add text or a file to share.', true);
+            return;
         }
 
-        const data = await res.json();
-        hideLoader();
+        handleAsyncOperation(async () => {
+            // ✅ Multiple files
+            if (fileInput.files.length > 1) {
+            showMessage(uploadResult, 'Uploading multiple files...');
+            const multiFormData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                multiFormData.append('files', fileInput.files[i]);
+            }
 
-        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
-        const fileList = data.files.map(f => `<li>${f}</li>`).join('');
+            try {
+                const res = await fetch(`${API_BASE_URL}/upload_multiple`, {
+                method: 'POST',
+                body: multiFormData,
+                });
 
-        const successMessage = `
-          <p>✅ Uploaded <strong>${data.files.length}</strong> files successfully!</p>
-          <p>Your share code:</p>
-          <h2 style="letter-spacing: 2px;">${data.code}</h2>
-          <ul>${fileList}</ul>
-          <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
-        `;
-        showMessage(uploadResult, successMessage);
+                if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Multiple file upload failed: ${errorText}`);
+                }
 
-        uploadForm.reset();
-        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
-      } catch (error) {
-        console.error(error);
-        showMessage(uploadResult, error.message, true);
-      }
-      return;
-    }
+                const data = await res.json();
+                hideLoader();
 
-    // ✅ Single file upload
-    if (fileInput.files.length === 1) {
-      showMessage(uploadResult, 'Uploading file...');
-      try {
-        const res = await fetch(`${API_BASE_URL}/upload`, {
-          method: 'POST',
-          body: formData
+                const viewUrl = `${API_BASE_URL}/view/${data.code}`;
+                const fileList = data.files.map(f => `<li>${f}</li>`).join('');
+
+                const successMessage = `
+                <p>✅ Uploaded <strong>${data.files.length}</strong> files successfully!</p>
+                <p>Your share code:</p>
+                <h2 style="letter-spacing: 2px;">${data.code}</h2>
+                <ul>${fileList}</ul>
+                <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
+                `;
+                showMessage(uploadResult, successMessage);
+
+                uploadForm.reset();
+                dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+            } catch (error) {
+                console.error(error);
+                showMessage(uploadResult, error.message, true);
+            }
+            return;
+            }
+
+            // ✅ Single file upload
+            if (fileInput.files.length === 1) {
+            showMessage(uploadResult, 'Uploading file...');
+            try {
+                const res = await fetch(`${API_BASE_URL}/upload`, {
+                method: 'POST',
+                body: formData
+                });
+                if (!res.ok) throw new Error('File upload failed!');
+
+                const data = await res.json();
+                hideLoader();
+
+                const fileName = formData.get('file').name;
+                const viewUrl = `${API_BASE_URL}/view/${data.code}`;
+                const successMessage = `
+                <p>✅ File '<strong>${fileName}</strong>' uploaded successfully!</p>
+                <p>Your share code:</p>
+                <h2 style="letter-spacing: 2px;">${data.code}</h2>
+                <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
+                `;
+                showMessage(uploadResult, successMessage);
+
+                uploadForm.reset();
+                dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+            } catch (error) {
+                showMessage(uploadResult, error.message, true);
+            }
+            return;
+            }
+
+            // ✅ Text-only upload
+            showMessage(uploadResult, 'Generating code...');
+            try {
+            const res = await fetch(`${API_BASE_URL}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            if (!res.ok) throw new Error('Text upload failed!');
+
+            const data = await res.json();
+            hideLoader();
+
+            currentCode = data.code;
+            originalText = textContent.value;
+            generateBtn.classList.add('hidden');
+            updateBtn.classList.remove('hidden');
+            updateBtn.disabled = true;
+            dropZone.classList.add('hidden');
+
+            const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
+            const successMessage = `
+                <p>✅ Success! Your share code is:</p>
+                <h2 style="letter-spacing: 2px;">${currentCode}</h2>
+                <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
+            `;
+            showMessage(uploadResult, successMessage);
+            } catch (error) {
+            showMessage(uploadResult, error.message, true);
+            }
         });
-        if (!res.ok) throw new Error('File upload failed!');
-
-        const data = await res.json();
-        hideLoader();
-
-        const fileName = formData.get('file').name;
-        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
-        const successMessage = `
-          <p>✅ File '<strong>${fileName}</strong>' uploaded successfully!</p>
-          <p>Your share code:</p>
-          <h2 style="letter-spacing: 2px;">${data.code}</h2>
-          <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
-        `;
-        showMessage(uploadResult, successMessage);
-
-        uploadForm.reset();
-        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
-      } catch (error) {
-        showMessage(uploadResult, error.message, true);
-      }
-      return;
-    }
-
-    // ✅ Text-only upload
-    showMessage(uploadResult, 'Generating code...');
-    try {
-      const res = await fetch(`${API_BASE_URL}/upload`, {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) throw new Error('Text upload failed!');
-
-      const data = await res.json();
-      hideLoader();
-
-      currentCode = data.code;
-      originalText = textContent.value;
-      generateBtn.classList.add('hidden');
-      updateBtn.classList.remove('hidden');
-      updateBtn.disabled = true;
-      dropZone.classList.add('hidden');
-
-      const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
-      const successMessage = `
-        <p>✅ Success! Your share code is:</p>
-        <h2 style="letter-spacing: 2px;">${currentCode}</h2>
-        <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
-      `;
-      showMessage(uploadResult, successMessage);
-    } catch (error) {
-      showMessage(uploadResult, error.message, true);
-    }
-  });
-});
+        });
 
         
         updateBtn.addEventListener('click', async () => {

@@ -225,15 +225,34 @@ async def view_shared_content(code: str):
         files = os.listdir(folder_path)
         if not files:
             raise HTTPException(status_code=404, detail="No files in folder.")
-        file_links = "".join(
-            [f"<li><a href='/get_multiple/{code}/{f}' target='_blank'>{f}</a></li>" for f in files]
-        )
+
+        # --- Preview different file types ---
+        def is_text(f): return any(f.endswith(ext) for ext in [".txt", ".py", ".js", ".html", ".css", ".json", ".md"])
+        def is_image(f): return any(f.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg"])
+        def is_pdf(f): return f.endswith(".pdf")
+
+        previews = ""
+        for f in files:
+            file_url = f"/get_multiple/{code}/{f}"
+            safe_name = html.escape(f)
+
+            if is_text(f):
+                with open(os.path.join(folder_path, f), "r", encoding="utf-8", errors="ignore") as file_data:
+                    content = html.escape(file_data.read()[:5000])  # limit preview size
+                previews += f"<h3>📄 {safe_name}</h3><pre style='background:#f8f9fa;padding:10px;border-radius:8px;'>{content}</pre><hr>"
+            elif is_image(f):
+                previews += f"<h3>🖼️ {safe_name}</h3><img src='{file_url}' alt='{safe_name}' style='max-width:100%;border-radius:10px;'/><hr>"
+            elif is_pdf(f):
+                previews += f"<h3>📘 {safe_name}</h3><embed src='{file_url}' type='application/pdf' width='100%' height='500px'/><hr>"
+            else:
+                previews += f"<h3>📦 {safe_name}</h3><a href='{file_url}' target='_blank'>Download</a><hr>"
+
         html_content = f"""
         <html>
-        <head><title>Shared Files</title></head>
-        <body style="font-family:Arial;">
+        <head><title>Quick Share - {code}</title></head>
+        <body style="font-family:Arial;margin:30px;">
             <h2>📂 Files for code: {code}</h2>
-            <ul>{file_links}</ul>
+            {previews}
         </body>
         </html>
         """
