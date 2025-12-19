@@ -286,7 +286,11 @@ async def get_shared_content(file_id: str):
     file_path = os.path.join(UPLOAD_DIRECTORY, file_id)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Content not found.")
-    return FileResponse(path=file_path)
+    return FileResponse(
+        path=file_path, 
+        filename=file_id, 
+        content_disposition_type="attachment"
+    )
 
 @app.get("/get_multiple/{code}/{filename}")
 async def get_file_from_folder(code: str, filename: str):
@@ -296,4 +300,8 @@ async def get_file_from_folder(code: str, filename: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found.")
 
-    return FileResponse(path=file_path, filename=filename)
+    return FileResponse(
+        path=file_path, 
+        filename=filename,
+        content_disposition_type="attachment"
+    )

@@ -200,6 +200,38 @@
                 textContent.value = "";
             }
         });
+
+        // ✨ HELPER: Force Download Function
+        async function forceDownload(url, filename, btnElement) {
+            const originalText = btnElement.textContent;
+            btnElement.textContent = '⏳ Downloading...';
+            btnElement.disabled = true;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network error');
+
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Download failed:', error);
+                // Fallback: open in new tab if fetch fails
+                window.open(url, '_blank');
+            } finally {
+                btnElement.textContent = originalText;
+                btnElement.disabled = false;
+            }
+        }
         
         retrieveForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -316,12 +348,13 @@
                                 }
 
                                 // Add download button
-                                const dlBtn = document.createElement('a');
-                                dlBtn.href = fileUrl;
+                                const dlBtn = document.createElement('button');
                                 dlBtn.textContent = 'Download File';
-                                dlBtn.setAttribute('download', f);
                                 dlBtn.classList.add('button');
                                 dlBtn.style.marginTop = "15px";
+                                dlBtn.addEventListener('click', () => {
+                                    forceDownload(fileUrl, f, dlBtn);
+                                });
                                 contentView.appendChild(dlBtn);
 
                                 // Add back button to return to grid view
@@ -340,13 +373,14 @@
                             };
                             
                             // Download button
-                            const downloadBtn = document.createElement('a');
-                            downloadBtn.href = fileUrl;
+                            const downloadBtn = document.createElement('button');
                             downloadBtn.textContent = '⬇️ Download';
-                            downloadBtn.setAttribute('download', f);
                             downloadBtn.className = 'button button-secondary';
                             downloadBtn.style.marginTop = "8px";
                             downloadBtn.style.fontSize = "0.9em";
+                            downloadBtn.addEventListener('click', () => {
+                                forceDownload(fileUrl, f, downloadBtn);
+                            });
                             
                             // Filename display
                             const fileName = document.createElement('div');
@@ -428,12 +462,13 @@
                             contentView.appendChild(info);
                         }
 
-                        const downloadBtn = document.createElement('a');
-                        downloadBtn.href = fileUrl;
+                        const downloadBtn = document.createElement('button');
                         downloadBtn.textContent = 'Download File';
-                        downloadBtn.setAttribute('download', '');
                         downloadBtn.classList.add('button');
                         downloadBtn.style.marginTop = "15px";
+                        downloadBtn.addEventListener('click', () => {
+                            forceDownload(fileUrl, data.filename, downloadBtn);
+                        });
                         contentView.appendChild(downloadBtn);
                     }
 
