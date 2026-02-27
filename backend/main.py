@@ -62,6 +62,10 @@ def cleanup_old_files():
         except Exception as e:
             print(f"Error cleaning up file {filename}: {e}")
 
+@app.get("/health")
+async def health():
+    return {"status": "alive"}
+
 @app.on_event("startup")
 async def startup_event():
     """Initializes and starts the background scheduler on server startup."""
