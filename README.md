@@ -2,6 +2,17 @@
   <img src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=28&pause=1200&color=0EA5E9&center=true&vCenter=true&width=900&lines=Quick+Share;Share+Text+and+Files+with+Short+Codes;Fast%2C+Simple%2C+Ephemeral" alt="Typing animation" />
 </p>
 
+```text
+
+                ██████  ██    ██ ██  ██████  ██   ██      ███████ ██   ██  █████  ██████  ███████
+                ██    ██ ██    ██ ██ ██       ██  ██       ██      ██   ██ ██   ██ ██   ██ ██      
+                ██    ██ ██    ██ ██ ██       █████        ███████ ███████ ███████ ██████  █████   
+                ██ ▄▄ ██ ██    ██ ██ ██       ██  ██            ██ ██   ██ ██   ██ ██   ██ ██      
+                ██████   ██████  ██  ██████  ██   ██      ███████ ██   ██ ██   ██ ██   ██ ███████
+                    ▀▀                                                                            
+
+```
+
 # Quick Share
 
 A modern, lightweight full-stack sharing app that lets users upload text snippets or files, receive a short code, and retrieve shared content instantly.
