@@ -131,8 +131,8 @@
         const contactBtn = document.getElementById('contactBtn');
         const contactModal = document.getElementById('contactModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        const contactForm = document.getElementById('contactForm');
-        const contactStatus = document.getElementById('contactStatus');
+        // const contactForm = document.getElementById('contactForm');
+        // const contactStatus = document.getElementById('contactStatus');
 
         // Loader functions
         const showLoader = () => loaderContainer.classList.remove('hidden');
@@ -198,20 +198,20 @@
             }
         });
 
-        contactForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const name = document.getElementById('contactName').value.trim();
-            const email = document.getElementById('contactEmail').value.trim();
-            const message = document.getElementById('contactMessage').value.trim();
+        // contactForm.addEventListener('submit', (event) => {
+        //     event.preventDefault();
+        //     const name = document.getElementById('contactName').value.trim();
+        //     const email = document.getElementById('contactEmail').value.trim();
+        //     const message = document.getElementById('contactMessage').value.trim();
 
-            const subject = encodeURIComponent(`Quick Share contact from ${name}`);
-            const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+        //     const subject = encodeURIComponent(`Quick Share contact from ${name}`);
+        //     const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
 
-            contactStatus.textContent = 'Opening your mail app to send the message.';
-            contactStatus.classList.remove('hidden');
+        //     contactStatus.textContent = 'Opening your mail app to send the message.';
+        //     contactStatus.classList.remove('hidden');
 
-            window.location.href = `mailto:rohitadak0@gmail.com?subject=${subject}&body=${body}`;
-        });
+        //     window.location.href = `mailto:rohitadak0@gmail.com?subject=${subject}&body=${body}`;
+        // });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && !contactModal.classList.contains('hidden')) {
@@ -690,5 +690,6 @@
             }
         });
     </script>
+    <script src="contact.js"></script>
 </body>
 </html>

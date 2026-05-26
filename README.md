@@ -13,8 +13,6 @@
 
 ```
 
-# Quick Share
-
 A modern, lightweight full-stack sharing app that lets users upload text snippets or files, receive a short code, and retrieve shared content instantly.
 
 ## Overview
@@ -39,8 +37,13 @@ quick share/
 │   ├── requirements.txt    (dependencies)
 │   └── .gitignore
 └── frontend/
+|   ├── api/
+|   |   └── contact.js  (handle serverless connection for contact form)
 |   ├── index.html
-|   └── styles.css
+|   ├── contact.js      (handles contact form submission)
+|   ├── styles.css
+|   ├── .env            (stores environment variables for frontend)
+|   └── .gitignore
 └── README.md
 ```
 
@@ -71,6 +74,27 @@ quick share/
 - Vanilla JavaScript (Fetch API)
 
 ## Installation & Setup
+
+## Serverless contact form (how it works)
+
+- The contact form on the frontend posts to `/api/contact`.
+- In production the route should be provided by a serverless platform (Vercel,
+  Netlify, or similar) that maps `/api/contact` to the file
+  `frontend/api/contact.js`.
+- `frontend/api/contact.js` uses `nodemailer` and environment variables to send
+  mail through Gmail (or any SMTP provider supported by Nodemailer).
+
+Required environment variables for the serverless contact function:
+
+- `GMAIL_USER` — the Gmail address to send from and receive messages to
+- `GMAIL_APP_PASSWORD` — Gmail app password (recommended) or SMTP password
+
+Note: If you prefer not to use Gmail, update the transporter configuration in
+`frontend/api/contact.js` to match your SMTP provider and environment variables.
+
+Security note: Do not commit credentials to the repo. Configure secrets in your
+serverless provider dashboard (Vercel/Netlify) or use a secrets manager.
+
 
 ### 1) Clone the repository
 
@@ -129,8 +153,33 @@ Then open:
 ```text
 http://localhost:5500
 ```
+Serverless contact function (local emulation / dev notes):
+
+- The `frontend/api/contact.js` file is written as an ES module serverless
+  function. To test locally you can either:
+  - Use a serverless framework (Vercel CLI: `vercel dev`) which will expose
+    `/api/contact` and load environment variables from a `.env` file, or
+  - Run a minimal Express or server that mounts that handler while setting
+    `process.env.GMAIL_USER` and `process.env.GMAIL_APP_PASSWORD` locally.
+
+Example using Vercel CLI (recommended for parity with deployment):
+
+```bash
+cd frontend
+# install dependencies
+npm install
+# create a .env file (use .env.local for Vercel dev) with the two vars
+# then run
+npx vercel dev
+```
+
 
 ## Environment Variables
+When the serverless function is deployed (Vercel/Netlify), the frontend's
+fetch('/api/contact') call will resolve to the deployed function automatically.
+
+- `GMAIL_USER` — Gmail address used by the serverless function to send/receive
+- `GMAIL_APP_PASSWORD` — app password for Gmail (or SMTP password)
 
 This project currently uses in-code configuration (no `.env` file required yet).
 
