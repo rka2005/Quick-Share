@@ -18,7 +18,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5500",          # For local testing
     "http://127.0.0.1:5500",         # For local testing
-    "https://quick-share-xwhs.onrender.com", # Added as requested
+    "https://qshareio.vercel.app",   # Added as requested
 ]
 
 app.add_middleware(
