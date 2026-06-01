@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/backend/:path*",
+      "destination": "https://quick-share-xwhs.onrender.com/:path*"
+    }
+  ]
+}
