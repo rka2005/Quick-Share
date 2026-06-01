@@ -42,6 +42,7 @@ quick share/
 |   ├── index.html
 |   ├── contact.js      (handles contact form submission)
 |   ├── styles.css
+|   ├── vercel.json       (rewrites for backend API)
 |   ├── .env            (stores environment variables for frontend)
 |   └── .gitignore
 └── README.md
@@ -57,6 +58,8 @@ quick share/
 - **CORS-enabled API** for local and deployed frontend integration
 - **Dark/light theme UI** with modern interactions
 - **Drag-and-drop file upload** in frontend
+- **Backend URL masking via Vercel rewrites**
+- **Serverless contact form** powered by Vercel Functions
 
 ## Tech Stack
 
@@ -71,7 +74,9 @@ quick share/
 ### Frontend
 - HTML5
 - CSS3
-- Vanilla JavaScript (Fetch API)
+- Vanilla JavaScript
+- Vercel Rewrites
+- Vercel Serverless Functions
 
 ## Installation & Setup
 
@@ -175,22 +180,35 @@ npx vercel dev
 
 
 ## Environment Variables
-When the serverless function is deployed (Vercel/Netlify), the frontend's
-fetch('/api/contact') call will resolve to the deployed function automatically.
+| Name | Used In | Purpose |
+|--------|--------|--------|
+| `GMAIL_USER` | Serverless Contact API | Sender email |
+| `GMAIL_APP_PASSWORD` | Serverless Contact API | SMTP authentication |
 
-- `GMAIL_USER` — Gmail address used by the serverless function to send/receive
-- `GMAIL_APP_PASSWORD` — app password for Gmail (or SMTP password)
 
-This project currently uses in-code configuration (no `.env` file required yet).
+## Vercel Rewrite Configuration
 
-| Name | Current Value | Used In | Purpose |
-|---|---|---|---|
-| `UPLOAD_DIRECTORY` | `uploads` | `backend/main.py` | Storage directory for shared files/text |
-| `CODE_LENGTH` | `6` | `backend/main.py` | Length of generated share code |
-| `EXPIRATION_SECONDS` | `43200` (12h) | `backend/main.py` | Auto-expiration window for shared content |
-| `API_BASE_URL` | `https://quick-share-xwhs.onrender.com` | `frontend/index.html` | Backend API base URL used by frontend |
+Quick Share uses Vercel rewrites to proxy frontend requests to the FastAPI backend.
 
-If you want environment-based configuration, replace constants with `os.getenv(...)` in `backend/main.py`.
+```json
+{
+  "rewrites": [
+    {
+      "source": "/backend/:path*",
+      "destination": "https://<render-backend>/:path*"
+    }
+  ]
+}
+```
+
+Frontend requests use:
+
+```javascript
+const API_BASE_URL = "/backend";
+```
+
+instead of exposing the backend URL directly in the client code.
+
 
 ## Venv Initialization (Quick Reference)
 
@@ -210,6 +228,28 @@ pip install -r requirements.txt
 deactivate
 ```
 
+## Deployment Architecture
+
+```text
+User
+ │
+ ▼
+qshareio.vercel.app
+ │
+ ├── Frontend (HTML/CSS/JS)
+ │
+ ├── /api/contact
+ │      ▼
+ │   Vercel Serverless Function
+ │
+ └── /backend/*
+        ▼
+     Vercel Rewrite
+        ▼
+     FastAPI Backend (Render)
+     
+```
+
 ## API Highlights
 
 - `GET /health` — health check
@@ -220,6 +260,14 @@ deactivate
 - `GET /view/{code}` — browser preview route
 - `GET /get/{file_id}` — download single shared file
 - `GET /get_multiple/{code}/{filename}` — download file from multi-upload folder
+
+## Security Features
+
+- Restricted CORS policy
+- Temporary file expiration and cleanup
+- Backend URL abstraction via Vercel rewrites
+- Server-side contact form processing
+- Environment-variable-based credential management
 
 ## Contact Information
 
