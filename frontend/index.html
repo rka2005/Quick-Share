@@ -53,7 +53,7 @@
         <div id="initialView">
             <div id="retrieveSection">
                 <form id="retrieveForm">
-                    <input type="text" id="codeInput" maxlength="6" minlength="6" pattern="[A-Z]{6}" placeholder="Enter share code..." required style="text-transform: uppercase;">
+                    <input type="text" id="codeInput" maxlength="6" minlength="6" pattern="[A-Z]{6}" placeholder="Enter share code..." required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
                     <button type="submit">Get Content</button>
                 </form>
                 <div id="retrieveResult" class="hidden"></div>
@@ -124,7 +124,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = "/backend";
+        const API_BASE_URL = "https://leonard-million-investment-plan.trycloudflare.com";
         // ✨ --- 3. JAVASCRIPT FOR LOADER & THEME --- ✨
         const loaderContainer = document.getElementById('loaderContainer');
         const themeToggle = document.getElementById('themeToggle');
