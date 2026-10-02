@@ -18,11 +18,13 @@ A modern, lightweight full-stack sharing app that lets users upload text snippet
 ## Overview
 
 Quick Share is built for fast, temporary content transfer. Users can:
-- Share text snippets
-- Upload single or multiple files
-- Retrieve content with a generated code
-- Preview supported content types directly in browser
+- Share text snippets with 1-click copy
+- Upload single or multiple files under a single 6-letter share code
+- Retrieve content with instant code lookup
+- **Preview supported file types directly in the browser** (PDFs, images, audio, video, code/text files) without forcing unwanted downloads
+- **Download files on demand** using dedicated download actions
 - Update previously shared text by code
+- Experience interactive upload visuals (Origami Dragon & Jet flight telemetry HUD)
 
 The backend automatically cleans up expired uploads to keep storage lean and ephemeral.
 
@@ -30,76 +32,153 @@ The backend automatically cleans up expired uploads to keep storage lean and eph
 
 ```text
 quick share/
+├── .vscode/
+│   └── settings.json           (Five Server / Live Server watch ignore rules)
+├── fiveserver.config.js        (Five Server development configuration)
 ├── backend/
-|   ├── uploads/    (stores shared files/text)
-|   ├── venv/       (created after setup)
-│   ├── main.py     (backend FastAPI app)
-│   ├── requirements.txt    (dependencies)
+│   ├── uploads/                (ephemeral storage for shared files/folders)
+│   ├── venv/                   (virtual environment)
+│   ├── main.py                 (FastAPI backend application)
+│   ├── requirements.txt        (Python dependencies)
 │   └── .gitignore
-└── frontend/
-|   ├── api/
-|   |   └── contact.js  (handle serverless connection for contact form)
-|   ├── index.html
-|   ├── contact.js      (handles contact form submission)
-|   ├── styles.css
-|   ├── vercel.json       (rewrites for backend API)
-|   ├── .env            (stores environment variables for frontend)
-|   └── .gitignore
+├── frontend/
+│   ├── api/
+│   │   └── contact.js          (Vercel serverless function for contact form)
+│   ├── contact.js              (Contact form client handler)
+│   ├── index.html              (Main web application)
+│   ├── styles.css              (Glassmorphic design system & themes)
+│   ├── vercel.json             (Vercel rewrites for backend proxy)
+│   ├── .env                    (Frontend environment variables)
+│   └── .gitignore
 └── README.md
 ```
 
+## System Architecture
+
+```mermaid
+graph TD
+    subgraph Client ["Client Layer (Browser)"]
+        UI["Quick Share Web App<br/>(HTML5 / CSS3 / Vanilla JS)"]
+        HUD["Flight Deck HUD<br/>(SVG Telemetry & Vessel Animations)"]
+        Storage["SessionStorage<br/>(Code Persistence & Recovery)"]
+        PreviewEngine["Inline Preview Engine<br/>(PDF / Image / Video / Audio / Code)"]
+    end
+
+    subgraph Edge ["Routing & Edge Layer"]
+        VercelRewrite["Vercel Proxy / Rewrites<br/>(/backend/*)"]
+        ContactFn["Vercel Serverless Function<br/>(/api/contact via Nodemailer)"]
+        CFTunnel["Cloudflare Tunnel<br/>(Dev / Remote Gateway)"]
+    end
+
+    subgraph Backend ["Backend API Layer (FastAPI & Uvicorn)"]
+        Router["FastAPI Application"]
+        UploadHandler["Upload Service<br/>(Single File & Batch Multi-File)"]
+        CodeGenerator["Code Generator<br/>(6-Char Unique Uppercase Code)"]
+        RetrieveHandler["Content Resolver & Metadata Finder<br/>(/find_file/{code})"]
+        StreamHandler["FileResponse Streamer<br/>(?download=true / inline)"]
+        Scheduler["APScheduler Background Worker<br/>(12-Hour TTL Auto-Purge)"]
+    end
+
+    subgraph StorageLayer ["Ephemeral Storage Layer (Disk)"]
+        UploadDir[("uploads/ Directory")]
+        BatchFolders["Batch Folders<br/>(uploads/CODE/file1, file2...)"]
+        SingleFiles["Single Files<br/>(uploads/CODE.ext)"]
+        Snippets["Text Snippets<br/>(uploads/CODE.txt)"]
+    end
+
+    %% Client Interactions
+    UI -->|1. Upload Text or Files| VercelRewrite
+    UI -->|Direct Local / Tunnel Calls| CFTunnel
+    UI -->|Submit Contact Form| ContactFn
+    
+    %% Routing to Backend
+    VercelRewrite --> Router
+    CFTunnel --> Router
+
+    %% Backend Services
+    Router --> UploadHandler
+    Router --> RetrieveHandler
+    Router --> StreamHandler
+
+    UploadHandler --> CodeGenerator
+    UploadHandler -->|Persist Content| StorageLayer
+    
+    RetrieveHandler -->|Check Path & Read Metadata| StorageLayer
+    RetrieveHandler -->|Return Content JSON| UI
+    
+    %% File Streaming
+    UI -->|2. Preview File| StreamHandler
+    StreamHandler -->|Content-Disposition: inline| PreviewEngine
+    
+    UI -->|3. Download File (?download=true)| StreamHandler
+    StreamHandler -->|Content-Disposition: attachment| UI
+
+    %% Cleanup
+    Scheduler -.->|Hourly Scan & Purge Expired| StorageLayer
+
+    classDef client fill:#e0e7ff,stroke:#4338ca,stroke-width:1px;
+    classDef edge fill:#fef3c7,stroke:#b45309,stroke-width:1px;
+    classDef backend fill:#dcfce7,stroke:#15803d,stroke-width:1px;
+    classDef storage fill:#f3e8ff,stroke:#7e22ce,stroke-width:1px;
+
+    class UI,HUD,Storage,PreviewEngine client;
+    class VercelRewrite,ContactFn,CFTunnel edge;
+    class Router,UploadHandler,CodeGenerator,RetrieveHandler,StreamHandler,Scheduler backend;
+    class StorageLayer,UploadDir,BatchFolders,SingleFiles,Snippets storage;
+```
+
+### Architectural Workflow
+
+1. **Upload & Ingestion Pipeline**:
+   - The user selects one or more files or pastes text.
+   - The client tracks real-time progress via `XMLHttpRequest.upload` and updates the interactive flight deck HUD.
+   - The backend generates a cryptographically random, uppercase 6-character identifier.
+   - Files are stored as either `uploads/{CODE}.{ext}` (single uploads) or inside a isolated batch folder `uploads/{CODE}/{filename}` (multiple uploads).
+   - Once successfully saved, the code is returned, displayed with a 1-click **Copy** button, and cached in `sessionStorage` for persistence across refreshes.
+
+2. **Retrieval, Preview & Download Pipeline**:
+   - The recipient submits a 6-letter share code to `GET /find_file/{code}` to retrieve content type and file metadata.
+   - **Inline Preview**: Requests without `download=true` return `Content-Disposition: inline` with auto-detected MIME types (`application/pdf`, images, videos, audio, text) so the browser renders them seamlessly inside embedded viewers without triggering downloads.
+   - **On-Demand Download**: When the user clicks **⬇️ Download**, the client queries the endpoint with `?download=true`, instructing FastAPI to return `Content-Disposition: attachment; filename="{filename}"` to save the file with its original name.
+
+3. **Lifecycle & Storage Management**:
+   - `APScheduler` runs an automated background routine every hour.
+   - Any uploaded files or folders whose last modification timestamp exceeds `EXPIRATION_SECONDS` (12 hours) are automatically deleted to maintain zero storage bloat and enforce ephemeral privacy.
+
 ## Core Features
 
-- **Short-code sharing** for text and file content
-- **Multiple file upload** support in a single share code
-- **Content retrieval and preview** via code lookup
-- **Text update endpoint** for editable shared snippets
-- **Automatic expiration cleanup** using background scheduler
-- **CORS-enabled API** for local and deployed frontend integration
-- **Dark/light theme UI** with modern interactions
-- **Drag-and-drop file upload** in frontend
-- **Backend URL masking via Vercel rewrites**
-- **Serverless contact form** powered by Vercel Functions
+- **Short-Code Sharing**: Generates unique, memorable 6-letter uppercase share codes.
+- **Multiple File Uploads**: Upload multiple files simultaneously, grouped under one share code.
+- **In-Browser File Previews (Fixed & Enhanced)**:
+  - **PDF Documents**: Rendered inline via embedded browser viewers without triggering unexpected file downloads.
+  - **Images**: Responsive image gallery previews (`png`, `jpg`, `jpeg`, `gif`, `webp`, `svg`).
+  - **Audio & Video**: Built-in HTML5 media players (`mp4`, `webm`, `mp3`, `wav`, `ogg`, `m4a`).
+  - **Code & Text**: Syntax-styled, scrollable text viewer with word-wrap for developer files (`txt`, `md`, `py`, `js`, `ts`, `json`, `css`, `html`, `csv`, etc.).
+  - **Unsupported Formats**: Clean fallback banner with direct download action.
+- **Dedicated Downloads**: Dedicated download buttons with `?download=true` force correct `Content-Disposition: attachment` headers and preserve original filenames across origins.
+- **Persistent Share Code UI**: Generated codes are preserved in `sessionStorage` with a 1-click **Copy Code** button, so codes remain visible even if the browser or development server refreshes.
+- **Local Dev Auto-Reload Protection**: Configured `fiveserver.config.js` and `.vscode/settings.json` to only watch the `frontend/` directory, preventing Five Server / Live Server from auto-reloading when the backend saves uploaded files.
+- **Interactive Flight HUD**: Origami Dragon and Jet flight deck animation with orbital progress ring, altitude, and velocity telemetry.
+- **Automatic Expiration Cleanup**: Background APScheduler cleans up files older than 12 hours.
+- **Dual Themes**: Polished light and dark glassmorphic themes with system toggle.
+- **Serverless Contact Form**: Sends messages through nodemailer using Vercel Serverless Functions.
 
 ## Tech Stack
 
 ### Backend
-- Python 3.9+
-- FastAPI
-- Uvicorn
-- APScheduler
-- Pydantic
-- python-multipart
+- **Python 3.9+**
+- **FastAPI** — High-performance async web framework
+- **Uvicorn** — ASGI web server
+- **Starlette** — `FileResponse` with configurable `inline` vs `attachment` disposition
+- **APScheduler** — Automated background file cleanup
+- **Pydantic** & **python-multipart** — Request validation and file upload handling
 
 ### Frontend
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Vercel Rewrites
-- Vercel Serverless Functions
+- **HTML5 & Vanilla JavaScript** — Zero-framework, lightweight, fast client
+- **Vanilla CSS3** — Glassmorphic styling with CSS variables and custom animations
+- **Vercel Rewrites & Serverless Functions** — Backend API proxy and contact form processing
 
 ## Installation & Setup
-
-## Serverless contact form (how it works)
-
-- The contact form on the frontend posts to `/api/contact`.
-- In production the route should be provided by a serverless platform (Vercel,
-  Netlify, or similar) that maps `/api/contact` to the file
-  `frontend/api/contact.js`.
-- `frontend/api/contact.js` uses `nodemailer` and environment variables to send
-  mail through Gmail (or any SMTP provider supported by Nodemailer).
-
-Required environment variables for the serverless contact function:
-
-- `GMAIL_USER` — the Gmail address to send from and receive messages to
-- `GMAIL_APP_PASSWORD` — Gmail app password (recommended) or SMTP password
-
-Note: If you prefer not to use Gmail, update the transporter configuration in
-`frontend/api/contact.js` to match your SMTP provider and environment variables.
-
-Security note: Do not commit credentials to the repo. Configure secrets in your
-serverless provider dashboard (Vercel/Netlify) or use a secrets manager.
-
 
 ### 1) Clone the repository
 
@@ -124,7 +203,7 @@ Activate virtual environment:
 
 **Windows (CMD):**
 ```cmd
-.venv\Scripts\activate.bat
+.\.venv\Scripts\activate.bat
 ```
 
 **macOS/Linux:**
@@ -144,9 +223,11 @@ Run backend server:
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+> **Tip:** If running locally, you can pass `--reload-exclude "uploads/*"` to prevent uvicorn from restarting when new uploads are written.
+
 ### 3) Frontend setup
 
-Open `frontend/index.html` with a static server (recommended):
+Open `frontend/index.html` with **Five Server** or **Live Server** (port 5500), or run Python's static server:
 
 ```bash
 # from project root
@@ -158,75 +239,39 @@ Then open:
 ```text
 http://localhost:5500
 ```
-Serverless contact function (local emulation / dev notes):
 
-- The `frontend/api/contact.js` file is written as an ES module serverless
-  function. To test locally you can either:
-  - Use a serverless framework (Vercel CLI: `vercel dev`) which will expose
-    `/api/contact` and load environment variables from a `.env` file, or
-  - Run a minimal Express or server that mounts that handler while setting
-    `process.env.GMAIL_USER` and `process.env.GMAIL_APP_PASSWORD` locally.
+> **Note on Five Server / Live Server:** The included `fiveserver.config.js` and `.vscode/settings.json` automatically prevent Five Server and Live Server from auto-reloading when files are uploaded to `backend/uploads/`.
 
-Example using Vercel CLI (recommended for parity with deployment):
+### 4) Serverless contact form (optional)
+
+The contact form posts to `/api/contact`. For local testing with Vercel CLI:
 
 ```bash
 cd frontend
-# install dependencies
 npm install
-# create a .env file (use .env.local for Vercel dev) with the two vars
-# then run
+# Create .env with GMAIL_USER and GMAIL_APP_PASSWORD
 npx vercel dev
 ```
 
-
 ## Environment Variables
+
 | Name | Used In | Purpose |
-|--------|--------|--------|
-| `GMAIL_USER` | Serverless Contact API | Sender email |
-| `GMAIL_APP_PASSWORD` | Serverless Contact API | SMTP authentication |
+|------|---------|---------|
+| `GMAIL_USER` | Serverless Contact API (`frontend/api/contact.js`) | Sender/recipient Gmail address |
+| `GMAIL_APP_PASSWORD` | Serverless Contact API (`frontend/api/contact.js`) | Gmail App Password for SMTP authentication |
 
+## API Endpoints
 
-## Vercel Rewrite Configuration
-
-Quick Share uses Vercel rewrites to proxy frontend requests to the FastAPI backend.
-
-```json
-{
-  "rewrites": [
-    {
-      "source": "/backend/:path*",
-      "destination": "https://<render-backend>/:path*"
-    }
-  ]
-}
-```
-
-Frontend requests use:
-
-```javascript
-const API_BASE_URL = "/backend";
-```
-
-instead of exposing the backend URL directly in the client code.
-
-
-## Venv Initialization (Quick Reference)
-
-```bash
-# from backend/
-python -m venv .venv
-```
-
-```powershell
-# PowerShell
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-```bash
-# deactivate later
-deactivate
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check endpoint (`{"status":"alive"}`) |
+| `POST` | `/upload` | Upload text snippet or single file |
+| `POST` | `/upload_multiple` | Upload multiple files in a batch folder |
+| `PUT` | `/update/{code}` | Update text snippet for an existing code |
+| `GET` | `/find_file/{code}` | Retrieve file metadata, text content, or file list |
+| `GET` | `/get/{file_id}` | Serve shared file (`?download=true` for download, default `inline` for preview) |
+| `GET` | `/get_multiple/{code}/{filename}` | Serve file from multi-upload folder (`?download=true` for download, default `inline` for preview) |
+| `GET` | `/view/{code}` | Standalone HTML preview page for shared content |
 
 ## Deployment Architecture
 
@@ -240,34 +285,22 @@ qshareio.vercel.app
  │
  ├── /api/contact
  │      ▼
- │   Vercel Serverless Function
+ │   Vercel Serverless Function (Nodemailer)
  │
  └── /backend/*
         ▼
      Vercel Rewrite
         ▼
-     FastAPI Backend (Render)
-     
+     FastAPI Backend (Render / Cloudflare Tunnel)
 ```
-
-## API Highlights
-
-- `GET /health` — health check
-- `POST /upload` — upload text or single file
-- `POST /upload_multiple` — upload multiple files
-- `PUT /update/{code}` — update text snippet by code
-- `GET /find_file/{code}` — resolve code to content/file metadata
-- `GET /view/{code}` — browser preview route
-- `GET /get/{file_id}` — download single shared file
-- `GET /get_multiple/{code}/{filename}` — download file from multi-upload folder
 
 ## Security Features
 
-- Restricted CORS policy
-- Temporary file expiration and cleanup
-- Backend URL abstraction via Vercel rewrites
-- Server-side contact form processing
-- Environment-variable-based credential management
+- **Strict CORS policy** tailored for local and production origins
+- **Automated file expiration** (12-hour lifespan)
+- **Safe preview disposition** preventing unintended executable downloads
+- **Backend URL masking** via Vercel rewrites
+- **Environment-variable credentials** for serverless mailing
 
 ## Contact Information
 
@@ -277,10 +310,5 @@ qshareio.vercel.app
 
 ## Acknowledgement
 
-- Built with FastAPI and vanilla frontend technologies.
-- Thanks to the open-source community for tools and libraries powering this project.
-
-## License
-
-No license file is currently included in this repository.
-
+- Built with FastAPI and vanilla frontend web standards.
+- Thanks to the open-source community for the tools powering this project.

@@ -88,23 +88,999 @@ body {
     backdrop-filter: blur(5px);
 }
 
-.book, .book__pg-shadow, .book__pg { animation: cover 5s ease-in-out infinite; }
-.book { background-color: hsl(268, 90%, 65%); border-radius: 0.25em; box-shadow: 0 0.25em 0.5em hsla(0, 0%, 0%, 0.3), 0 0 0 0.25em hsl(278, 100%, 57%) inset; padding: 0.25em; perspective: 37.5em; position: relative; width: 8em; height: 6em; transform: translate3d(0, 0, 0); transform-style: preserve-3d; }
-.book__pg-shadow, .book__pg { position: absolute; left: 0.25em; width: calc(50% - 0.25em); }
-.book__pg-shadow { animation-name: shadow; background-image: linear-gradient( -45deg, hsla(0, 0%, 0%, 0) 50%, hsla(0, 0%, 0%, 0.3) 50% ); filter: blur(0.25em); top: calc(100% - 0.25em); height: 3.75em; transform: scaleY(0); transform-origin: 100% 0%; }
-.book__pg { animation-name: pg1; background-color: hsl(223, 10%, 100%); background-image: linear-gradient( 90deg, hsla(223, 10%, 90%, 0) 87.5%, hsl(223, 10%, 90%) ); height: calc(100% - 0.5em); transform-origin: 100% 50%; }
-.book__pg--2, .book__pg--3, .book__pg--4 { background-image: repeating-linear-gradient( hsl(223, 10%, 10%) 0 0.125em, hsla(223, 10%, 10%, 0) 0.125em 0.5em ), linear-gradient(90deg, hsla(223, 10%, 90%, 0) 87.5%, hsl(223, 10%, 90%)); background-repeat: no-repeat; background-position: center; background-size: 2.5em 4.125em, 100% 100%; }
-.book__pg--2 { animation-name: pg2; }
-.book__pg--3 { animation-name: pg3; }
-.book__pg--4 { animation-name: pg4; }
-.book__pg--5 { animation-name: pg5; }
-@keyframes cover { from, 5%, 45%, 55%, 95%, to { animation-timing-function: ease-out; background-color: hsl(278, 84%, 67%); } 10%, 40%, 60%, 90% { animation-timing-function: ease-in; background-color: hsl(271, 90%, 45%); } }
-@keyframes shadow { from, 10.01%, 20.01%, 30.01%, 40.01% { animation-timing-function: ease-in; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0); } 5%, 15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95% { animation-timing-function: ease-out; transform: translate3d(0, 0, 1px) scaleY(0.2) rotateY(90deg); } 10%, 20%, 30%, 40%, 50%, to { animation-timing-function: ease-out; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg); } 50.01%, 60.01%, 70.01%, 80.01%, 90.01% { animation-timing-function: ease-in; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg); } 60%, 70%, 80%, 90%, to { animation-timing-function: ease-out; transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0); } }
-@keyframes pg1 { from, to { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.4deg); } 10%, 15% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(180deg); } 20%, 80% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(180deg); } 85%, 90% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(180deg); } }
-@keyframes pg2 { from, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0.3deg); } 5%, 10% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.3deg); } 20%, 25% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.9deg); } 30%, 70% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(179.9deg); } 75%, 80% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.9deg); } 90%, 95% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.3deg); } }
-@keyframes pg3 { from, 10%, 90%, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0.2deg); } 15%, 20% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.2deg); } 30%, 35% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.8deg); } 40%, 60% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(179.8deg); } 65%, 70% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.8deg); } 80%, 85% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.2deg); } }
-@keyframes pg4 { from, 20%, 80%, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0.1deg); } 25%, 30% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.1deg); } 40%, 45% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.7deg); } 50% { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(179.7deg); } 55%, 60% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.7deg); } 70%, 75% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0.1deg); } }
-@keyframes pg5 { from, 30%, 70%, to { animation-timing-function: ease-in; background-color: hsl(223, 10%, 45%); transform: translate3d(0, 0, 1px) rotateY(0); } 35%, 40% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0deg); } 50% { animation-timing-function: ease-in-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(179.6deg); } 60%, 65% { animation-timing-function: ease-out; background-color: hsl(223, 10%, 100%); transform: translate3d(0, 0, 1px) rotateY(0); } }
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+/* =========================================================
+   CELESTIAL SKYWAY UPLOAD FLIGHT DECK (DRAGON & AEROPLANE)
+   ========================================================= */
+
+.loader-container.upload-mode .book {
+    display: none;
+}
+
+.upload-progress {
+    position: relative;
+    width: min(520px, calc(100vw - 32px));
+    padding: 22px 24px 20px;
+    border-radius: 26px;
+    background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.28) 0%, rgba(15, 23, 56, 0.95) 60%),
+        linear-gradient(165deg, #0d1238 0%, #06091d 100%);
+    border: 1px solid rgba(167, 139, 250, 0.35);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6),
+        0 0 45px rgba(124, 58, 237, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(18px);
+    color: #fff;
+    text-align: left;
+    overflow: hidden;
+    animation: flight-card-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.upload-progress::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 245, 212, 0.06) 0%, transparent 60%);
+    pointer-events: none;
+    animation: ambient-nebula 12s ease-in-out infinite alternate;
+}
+
+@keyframes flight-card-entrance {
+    from {
+        opacity: 0;
+        transform: translateY(22px) scale(0.94);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes ambient-nebula {
+    0% {
+        transform: translate(-5%, -5%) scale(1);
+    }
+
+    100% {
+        transform: translate(5%, 5%) scale(1.1);
+    }
+}
+
+/* Header Deck: Tag & Mode Switcher */
+.flight-deck-header {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.flight-deck-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+}
+
+.live-radar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00f5d4;
+    box-shadow: 0 0 10px #00f5d4, 0 0 18px #00f5d4;
+    animation: radar-pulse 1.8s infinite;
+}
+
+@keyframes radar-pulse {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.8;
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.9);
+        opacity: 0.8;
+    }
+}
+
+.flight-deck-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #a7f3d0;
+}
+
+.flyer-selector {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 3px;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    gap: 2px;
+}
+
+.flyer-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    border-radius: 18px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: inherit;
+}
+
+.flyer-pill-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.flyer-pill-btn.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+    box-shadow: 0 2px 12px rgba(6, 182, 212, 0.38), 0 0 8px rgba(124, 58, 237, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.flyer-icon {
+    font-size: 13px;
+    line-height: 1;
+}
+
+/* Central HUD Orbit & Telemetry */
+.flight-hud {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 12px;
+}
+
+.hud-orbit-wrap {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    flex-shrink: 0;
+}
+
+.hud-orbit-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.hud-orbit-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 5;
+}
+
+.hud-orbit-bar {
+    fill: none;
+    stroke: url(#flightTrailGrad);
+    stroke-width: 5.5;
+    stroke-linecap: round;
+    stroke-dasharray: 226.2;
+    stroke-dashoffset: 226.2;
+    transition: stroke-dashoffset 0.15s ease-out;
+    filter: drop-shadow(0 0 6px rgba(0, 245, 212, 0.7));
+}
+
+.hud-percent-core {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hud-percent-core strong {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff5bc;
+    text-shadow: 0 0 10px rgba(255, 217, 106, 0.6);
+}
+
+.hud-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.flight-kicker-bar {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 1.4px;
+    color: #38bdf8;
+    text-transform: uppercase;
+}
+
+.flight-headline {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.2px;
+}
+
+.flight-telemetry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+
+.flight-telemetry strong {
+    color: #ffd166;
+    font-weight: 700;
+}
+
+.telem-sep {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+/* Wavy Sky Arena (SVG Viewport) */
+.sky-arena-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    border-radius: 18px;
+    background: radial-gradient(ellipse at 50% 30%, rgba(30, 41, 89, 0.7) 0%, rgba(6, 9, 26, 0.88) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 2px 14px rgba(0, 0, 0, 0.6), 0 4px 20px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    margin: 8px 0 14px;
+}
+
+.flight-sky-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 170px;
+    overflow: visible;
+}
+
+/* Trail & Path styles */
+.sky-guide-path {
+    fill: none;
+    stroke: rgba(126, 231, 255, 0.22);
+    stroke-width: 2;
+    stroke-dasharray: 4, 6;
+    stroke-linecap: round;
+}
+
+.sky-active-trail {
+    fill: none;
+    stroke: url(#flightTrailGrad);
+    stroke-width: 3.8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.12s ease-out;
+}
+
+/* Sky Waypoints & Portals */
+.flight-gate {
+    transition: all 0.3s ease;
+}
+
+.flight-gate.active-gate ellipse {
+    stroke: #00f5d4 !important;
+    stroke-width: 2.2 !important;
+    filter: drop-shadow(0 0 8px #00f5d4);
+    animation: gate-pulse 1s ease-in-out infinite alternate;
+}
+
+.flight-gate.active-gate text {
+    fill: #00f5d4 !important;
+    font-weight: 700;
+}
+
+@keyframes gate-pulse {
+    0% {
+        transform: scale(0.96);
+    }
+
+    100% {
+        transform: scale(1.08);
+    }
+}
+
+.destination-portal .portal-outer-ring {
+    transform-origin: 455px 75px;
+    animation: portal-spin 8s linear infinite;
+}
+
+.destination-portal .portal-inner-ring {
+    transform-origin: 455px 75px;
+    animation: portal-spin-reverse 5s linear infinite;
+}
+
+.destination-portal .portal-core {
+    transform-origin: 455px 75px;
+    animation: portal-core-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes portal-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes portal-spin-reverse {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes portal-core-glow {
+    0% {
+        transform: scale(0.9);
+        filter: drop-shadow(0 0 4px #ffd166);
+    }
+
+    100% {
+        transform: scale(1.3);
+        filter: drop-shadow(0 0 16px #ffd166) drop-shadow(0 0 28px #ff7b9d);
+    }
+}
+
+.upload-progress.completed .destination-portal .portal-core {
+    animation: celebration-burst 0.7s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+}
+
+@keyframes celebration-burst {
+    0% {
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 12px #ffd166);
+    }
+
+    100% {
+        transform: scale(2.2);
+        filter: drop-shadow(0 0 30px #00f5d4) drop-shadow(0 0 45px #ffd166);
+    }
+}
+
+/* Background floating clouds & speed streaks */
+.floating-cloud {
+    animation: cloud-float 7s ease-in-out infinite alternate;
+}
+
+.floating-cloud--2 {
+    animation: cloud-float 9s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes cloud-float {
+    0% {
+        transform: translateX(-4px) translateY(-1px);
+    }
+
+    100% {
+        transform: translateX(5px) translateY(2px);
+    }
+}
+
+.speed-streak {
+    stroke-dasharray: 20, 60;
+    animation: streak-fly 1.2s linear infinite;
+}
+
+.speed-streak--2 {
+    stroke-dasharray: 14, 50;
+    animation: streak-fly 0.9s linear infinite;
+    animation-delay: -0.4s;
+}
+
+@keyframes streak-fly {
+    0% {
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        stroke-dashoffset: -160;
+    }
+}
+
+/* Moving Vessel Animations */
+.flight-vessel {
+    transition: transform 0.12s ease-out;
+}
+
+.hidden-vessel {
+    display: none !important;
+}
+
+/* Origami Dragon Specific Animations */
+.vessel-dragon {
+    transform-origin: 0 0;
+}
+
+.dragon-wing-front {
+    transform-origin: 6px -6px;
+    animation: dragon-wing-beat-front 0.38s ease-in-out infinite alternate;
+}
+
+.dragon-wing-back {
+    transform-origin: 4px -4px;
+    animation: dragon-wing-beat-back 0.38s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes dragon-wing-beat-front {
+    0% {
+        transform: rotate(-24deg) scaleY(1.05);
+    }
+
+    100% {
+        transform: rotate(28deg) scaleY(0.65);
+    }
+}
+
+@keyframes dragon-wing-beat-back {
+    0% {
+        transform: rotate(-20deg) scaleY(1);
+    }
+
+    100% {
+        transform: rotate(24deg) scaleY(0.7);
+    }
+}
+
+.dragon-tail {
+    transform-origin: -28px 0px;
+    animation: dragon-tail-wave 0.85s ease-in-out infinite alternate;
+}
+
+@keyframes dragon-tail-wave {
+    0% {
+        transform: rotate(-10deg) translateY(-2px);
+    }
+
+    100% {
+        transform: rotate(12deg) translateY(2px);
+    }
+}
+
+.dragon-ember {
+    animation: ember-flicker 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes ember-flicker {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1.4);
+        opacity: 1;
+        filter: drop-shadow(0 0 6px #ffd166);
+    }
+}
+
+.dragon-magic-trail circle {
+    animation: stardust-fade 1.1s ease-in-out infinite alternate;
+}
+
+.dragon-magic-trail .sparkle-1 {
+    animation-delay: 0s;
+}
+
+.dragon-magic-trail .sparkle-2 {
+    animation-delay: 0.25s;
+}
+
+.dragon-magic-trail .sparkle-3 {
+    animation-delay: 0.5s;
+}
+
+.dragon-magic-trail .sparkle-4 {
+    animation-delay: 0.75s;
+}
+
+@keyframes stardust-fade {
+    0% {
+        opacity: 0.2;
+        transform: scale(0.7);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1.4);
+        filter: drop-shadow(0 0 5px #00f5d4);
+    }
+}
+
+/* Origami Aeroplane Specific Animations */
+.vessel-plane {
+    transform-origin: 0 0;
+}
+
+.jet-afterburner {
+    transform-origin: -18px 0px;
+    animation: jet-pulse 0.16s ease-in-out infinite alternate;
+}
+
+@keyframes jet-pulse {
+    0% {
+        transform: scaleX(0.85) scaleY(0.9);
+        opacity: 0.75;
+    }
+
+    100% {
+        transform: scaleX(1.45) scaleY(1.15);
+        opacity: 1;
+        filter: drop-shadow(0 0 8px #00f5d4);
+    }
+}
+
+/* Bottom Deck: Hint & Test Flight Trigger */
+.flight-deck-footer {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.progress-hint {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 11.5px;
+    margin: 0;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.preview-flight-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 217, 106, 0.08);
+    border: 1px dashed rgba(255, 217, 106, 0.45);
+    color: #ffd96a;
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 10.5px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.preview-flight-btn:hover {
+    background: rgba(255, 217, 106, 0.2);
+    border-color: #ffd96a;
+    box-shadow: 0 0 12px rgba(255, 217, 106, 0.35);
+    transform: translateY(-1px);
+}
+
+.preview-flight-btn:active {
+    transform: translateY(0);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+    .upload-progress {
+        padding: 18px 16px 16px;
+    }
+
+    .flight-deck-header {
+        margin-bottom: 12px;
+    }
+
+    .hud-orbit-wrap {
+        width: 58px;
+        height: 58px;
+    }
+
+    .hud-percent-core strong {
+        font-size: 16px;
+    }
+
+    .flight-headline {
+        font-size: 13.5px;
+    }
+
+    .flight-telemetry {
+        font-size: 8.5px;
+    }
+
+    .sky-arena-container {
+        margin: 6px 0 10px;
+    }
+
+    .flight-deck-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .preview-flight-btn {
+        align-self: flex-end;
+    }
+}
+
+.book,
+.book__pg-shadow,
+.book__pg {
+    animation: cover 5s ease-in-out infinite;
+}
+
+.book {
+    background-color: hsl(268, 90%, 65%);
+    border-radius: 0.25em;
+    box-shadow: 0 0.25em 0.5em hsla(0, 0%, 0%, 0.3), 0 0 0 0.25em hsl(278, 100%, 57%) inset;
+    padding: 0.25em;
+    perspective: 37.5em;
+    position: relative;
+    width: 8em;
+    height: 6em;
+    transform: translate3d(0, 0, 0);
+    transform-style: preserve-3d;
+}
+
+.book__pg-shadow,
+.book__pg {
+    position: absolute;
+    left: 0.25em;
+    width: calc(50% - 0.25em);
+}
+
+.book__pg-shadow {
+    animation-name: shadow;
+    background-image: linear-gradient(-45deg, hsla(0, 0%, 0%, 0) 50%, hsla(0, 0%, 0%, 0.3) 50%);
+    filter: blur(0.25em);
+    top: calc(100% - 0.25em);
+    height: 3.75em;
+    transform: scaleY(0);
+    transform-origin: 100% 0%;
+}
+
+.book__pg {
+    animation-name: pg1;
+    background-color: hsl(223, 10%, 100%);
+    background-image: linear-gradient(90deg, hsla(223, 10%, 90%, 0) 87.5%, hsl(223, 10%, 90%));
+    height: calc(100% - 0.5em);
+    transform-origin: 100% 50%;
+}
+
+.book__pg--2,
+.book__pg--3,
+.book__pg--4 {
+    background-image: repeating-linear-gradient(hsl(223, 10%, 10%) 0 0.125em, hsla(223, 10%, 10%, 0) 0.125em 0.5em), linear-gradient(90deg, hsla(223, 10%, 90%, 0) 87.5%, hsl(223, 10%, 90%));
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 2.5em 4.125em, 100% 100%;
+}
+
+.book__pg--2 {
+    animation-name: pg2;
+}
+
+.book__pg--3 {
+    animation-name: pg3;
+}
+
+.book__pg--4 {
+    animation-name: pg4;
+}
+
+.book__pg--5 {
+    animation-name: pg5;
+}
+
+@keyframes cover {
+
+    from,
+    5%,
+    45%,
+    55%,
+    95%,
+    to {
+        animation-timing-function: ease-out;
+        background-color: hsl(278, 84%, 67%);
+    }
+
+    10%,
+    40%,
+    60%,
+    90% {
+        animation-timing-function: ease-in;
+        background-color: hsl(271, 90%, 45%);
+    }
+}
+
+@keyframes shadow {
+
+    from,
+    10.01%,
+    20.01%,
+    30.01%,
+    40.01% {
+        animation-timing-function: ease-in;
+        transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0);
+    }
+
+    5%,
+    15%,
+    25%,
+    35%,
+    45%,
+    55%,
+    65%,
+    75%,
+    85%,
+    95% {
+        animation-timing-function: ease-out;
+        transform: translate3d(0, 0, 1px) scaleY(0.2) rotateY(90deg);
+    }
+
+    10%,
+    20%,
+    30%,
+    40%,
+    50%,
+    to {
+        animation-timing-function: ease-out;
+        transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg);
+    }
+
+    50.01%,
+    60.01%,
+    70.01%,
+    80.01%,
+    90.01% {
+        animation-timing-function: ease-in;
+        transform: translate3d(0, 0, 1px) scaleY(0) rotateY(180deg);
+    }
+
+    60%,
+    70%,
+    80%,
+    90%,
+    to {
+        animation-timing-function: ease-out;
+        transform: translate3d(0, 0, 1px) scaleY(0) rotateY(0);
+    }
+}
+
+@keyframes pg1 {
+
+    from,
+    to {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.4deg);
+    }
+
+    10%,
+    15% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(180deg);
+    }
+
+    20%,
+    80% {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(180deg);
+    }
+
+    85%,
+    90% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(180deg);
+    }
+}
+
+@keyframes pg2 {
+
+    from,
+    to {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(0.3deg);
+    }
+
+    5%,
+    10% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.3deg);
+    }
+
+    20%,
+    25% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.9deg);
+    }
+
+    30%,
+    70% {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(179.9deg);
+    }
+
+    75%,
+    80% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.9deg);
+    }
+
+    90%,
+    95% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.3deg);
+    }
+}
+
+@keyframes pg3 {
+
+    from,
+    10%,
+    90%,
+    to {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(0.2deg);
+    }
+
+    15%,
+    20% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.2deg);
+    }
+
+    30%,
+    35% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.8deg);
+    }
+
+    40%,
+    60% {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(179.8deg);
+    }
+
+    65%,
+    70% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.8deg);
+    }
+
+    80%,
+    85% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.2deg);
+    }
+}
+
+@keyframes pg4 {
+
+    from,
+    20%,
+    80%,
+    to {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(0.1deg);
+    }
+
+    25%,
+    30% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.1deg);
+    }
+
+    40%,
+    45% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.7deg);
+    }
+
+    50% {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(179.7deg);
+    }
+
+    55%,
+    60% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.7deg);
+    }
+
+    70%,
+    75% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0.1deg);
+    }
+}
+
+@keyframes pg5 {
+
+    from,
+    30%,
+    70%,
+    to {
+        animation-timing-function: ease-in;
+        background-color: hsl(223, 10%, 45%);
+        transform: translate3d(0, 0, 1px) rotateY(0);
+    }
+
+    35%,
+    40% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0deg);
+    }
+
+    50% {
+        animation-timing-function: ease-in-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(179.6deg);
+    }
+
+    60%,
+    65% {
+        animation-timing-function: ease-out;
+        background-color: hsl(223, 10%, 100%);
+        transform: translate3d(0, 0, 1px) rotateY(0);
+    }
+}
 
 .container {
     position: relative;
@@ -182,15 +1158,15 @@ body {
     transition: 0.4s;
 }
 
-#themeToggle:checked + .slider {
+#themeToggle:checked+.slider {
     background: #07132f;
 }
 
-#themeToggle:focus + .slider {
+#themeToggle:focus+.slider {
     box-shadow: 0 0 0 3px rgba(55, 121, 255, 0.3);
 }
 
-#themeToggle:checked + .slider .sun-moon {
+#themeToggle:checked+.slider .sun-moon {
     transform: translateX(26px);
     background-color: #f7f8ff;
     animation: rotate-center 0.6s ease-in-out both;
@@ -202,7 +1178,7 @@ body {
     fill: #93a6d9;
 }
 
-#themeToggle:checked + .slider .sun-moon .moon-dot {
+#themeToggle:checked+.slider .sun-moon .moon-dot {
     opacity: 1;
 }
 
@@ -256,7 +1232,7 @@ body {
     animation-iteration-count: infinite;
 }
 
-#themeToggle:checked + .slider .stars {
+#themeToggle:checked+.slider .stars {
     transform: translateY(0);
     opacity: 1;
 }
@@ -786,4 +1762,75 @@ footer {
     .contact-btn {
         min-width: 130px;
     }
+}
+
+/* =========================================================
+   ✨ FILE PREVIEW CARD & EMBED STYLES ✨
+   ========================================================= */
+.file-preview-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: previewIn 0.3s ease;
+}
+
+@keyframes previewIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.preview-media-box {
+    margin: 18px 0;
+    min-height: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 16px;
+    overflow: hidden;
+}
+
+.preview-media-box img {
+    max-width: 100%;
+    max-height: 550px;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: var(--soft-shadow);
+}
+
+.preview-media-box iframe {
+    width: 100%;
+    height: 550px;
+    border: none;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.preview-media-box pre {
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 500px;
+    overflow-y: auto;
+    color: var(--pre-text);
+    background: var(--pre-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
 }

@@ -1,26 +1,351 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quick Share</title>
     <link rel="icon" type="image/png" href="quick-share.png">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div id="loaderContainer" class="loader-container hidden">
-        <div class="book">
-            <div class="book__pg-shadow"></div>
-            <div class="book__pg"></div>
-            <div class="book__pg book__pg--2"></div>
-            <div class="book__pg book__pg--3"></div>
-            <div class="book__pg book__pg--4"></div>
-            <div class="book__pg book__pg--5"></div>
+        <div class="loader-content">
+            <div class="book">
+                <div class="book__pg-shadow"></div>
+                <div class="book__pg"></div>
+                <div class="book__pg book__pg--2"></div>
+                <div class="book__pg book__pg--3"></div>
+                <div class="book__pg book__pg--4"></div>
+                <div class="book__pg book__pg--5"></div>
+            </div>
+            <div id="uploadProgress" class="upload-progress hidden" aria-live="polite">
+                <!-- Flight Deck Header: Badge & Mode Switcher -->
+                <div class="flight-deck-header">
+                    <div class="flight-deck-badge">
+                        <span class="live-radar-dot"></span>
+                        <span class="flight-deck-tag">QUICK SHARE SKYWAY</span>
+                    </div>
+                    <div class="flyer-selector" role="tablist" aria-label="Select Flyer">
+                        <button type="button" id="btnModeDragon" class="flyer-pill-btn active" role="tab"
+                            aria-selected="true" title="Fly with Origami Paper Dragon">
+                            <span class="flyer-icon">🐉</span> Dragon
+                        </button>
+                        <button type="button" id="btnModePlane" class="flyer-pill-btn" role="tab" aria-selected="false"
+                            title="Fly with Origami Aeroplane">
+                            <span class="flyer-icon">✈️</span> Flight
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Central HUD: Orbital Progress & Telemetry -->
+                <div class="flight-hud">
+                    <div class="hud-orbit-wrap">
+                        <svg class="hud-orbit-svg" viewBox="0 0 84 84" aria-hidden="true">
+                            <circle class="hud-orbit-bg" cx="42" cy="42" r="36" />
+                            <circle id="hudOrbitProgress" class="hud-orbit-bar" cx="42" cy="42" r="36" />
+                        </svg>
+                        <div class="hud-percent-core">
+                            <strong id="uploadPercent">0%</strong>
+                        </div>
+                    </div>
+                    <div class="hud-copy">
+                        <span class="flight-kicker-bar">SECURE PAYLOAD DISPATCH</span>
+                        <span id="uploadProgressLabel" class="flight-headline">Igniting Sky Thrusters...</span>
+                        <div class="flight-telemetry">
+                            <span>ALT <strong id="flightAltitude">2,400 FT</strong></span>
+                            <span class="telem-sep">•</span>
+                            <span>VEL <strong id="flightVelocity">MACH 1.2</strong></span>
+                            <span class="telem-sep">•</span>
+                            <span>VECTOR <strong id="flightStatus">ASCENDING</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wavy Flight Arena SVG Canvas -->
+                <div id="uploadProgressTrack" class="sky-arena-container" aria-hidden="true">
+                    <svg id="flightSkySvg" viewBox="0 0 500 160" preserveAspectRatio="xMidYMid meet"
+                        class="flight-sky-svg">
+                        <defs>
+                            <linearGradient id="flightTrailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#00f5d4" />
+                                <stop offset="45%" stop-color="#7928ca" />
+                                <stop offset="85%" stop-color="#ff007a" />
+                                <stop offset="100%" stop-color="#ffd166" />
+                            </linearGradient>
+
+                            <linearGradient id="dragonSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#00f5d4" />
+                                <stop offset="45%" stop-color="#06b6d4" />
+                                <stop offset="100%" stop-color="#7c3aed" />
+                            </linearGradient>
+
+                            <linearGradient id="dragonUnder" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#fef08a" />
+                                <stop offset="100%" stop-color="#f59e0b" />
+                            </linearGradient>
+
+                            <linearGradient id="dragonHorn" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffd166" />
+                                <stop offset="100%" stop-color="#ef4444" />
+                            </linearGradient>
+
+                            <linearGradient id="dragonWingG1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#38bdf8" />
+                                <stop offset="50%" stop-color="#818cf8" />
+                                <stop offset="100%" stop-color="#c084fc" />
+                            </linearGradient>
+
+                            <linearGradient id="dragonWingG2" x1="0%" y1="100%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#0284c7" />
+                                <stop offset="100%" stop-color="#6366f1" />
+                            </linearGradient>
+
+                            <linearGradient id="planePaperBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff" />
+                                <stop offset="60%" stop-color="#f1f5f9" />
+                                <stop offset="100%" stop-color="#cbd5e1" />
+                            </linearGradient>
+
+                            <linearGradient id="planePaperShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#94a3b8" />
+                                <stop offset="100%" stop-color="#334155" />
+                            </linearGradient>
+
+                            <linearGradient id="planeAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#00f5d4" />
+                                <stop offset="50%" stop-color="#38bdf8" />
+                                <stop offset="100%" stop-color="#818cf8" />
+                            </linearGradient>
+
+                            <linearGradient id="jetFire" x1="100%" y1="50%" x2="0%" y2="50%">
+                                <stop offset="0%" stop-color="#ffffff" />
+                                <stop offset="25%" stop-color="#00f5d4" />
+                                <stop offset="65%" stop-color="#7928ca" />
+                                <stop offset="100%" stop-color="transparent" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Cosmic Twinkling Stars -->
+                        <g class="sky-stars" fill="#fff" opacity="0.75">
+                            <circle cx="65" cy="28" r="1.2" opacity="0.9" />
+                            <circle cx="120" cy="82" r="1.5" opacity="0.6" />
+                            <circle cx="210" cy="20" r="1.1" opacity="0.8" />
+                            <circle cx="260" cy="65" r="1.3" opacity="0.5" />
+                            <circle cx="340" cy="18" r="1.6" opacity="0.95" />
+                            <circle cx="380" cy="122" r="1.2" opacity="0.6" />
+                            <circle cx="430" cy="35" r="1.3" opacity="0.85" />
+                        </g>
+
+                        <!-- Drifting Origami Clouds -->
+                        <g class="floating-clouds" fill="rgba(255, 255, 255, 0.08)">
+                            <path class="floating-cloud"
+                                d="M 68,36 Q 80,24 96,28 Q 112,22 124,34 Q 134,36 138,44 Q 138,52 128,54 L 76,54 Q 66,52 68,36 Z" />
+                            <path class="floating-cloud--2"
+                                d="M 228,132 Q 240,122 256,126 Q 272,120 284,130 Q 292,132 296,140 L 220,140 Q 218,132 228,132 Z" />
+                            <path class="floating-cloud"
+                                d="M 358,32 Q 370,22 384,26 Q 398,20 410,30 Q 420,32 424,40 L 352,40 Q 350,32 358,32 Z" />
+                        </g>
+
+                        <!-- High-Speed Wind Streaks -->
+                        <g opacity="0.6">
+                            <line x1="20" y1="38" x2="160" y2="38" stroke="rgba(0, 245, 212, 0.3)" stroke-width="1.2"
+                                class="speed-streak" />
+                            <line x1="180" y1="88" x2="330" y2="88" stroke="rgba(255, 255, 255, 0.22)" stroke-width="1"
+                                class="speed-streak--2" />
+                            <line x1="310" y1="42" x2="440" y2="42" stroke="rgba(124, 58, 237, 0.3)" stroke-width="1.2"
+                                class="speed-streak" />
+                        </g>
+
+                        <!-- Waypoints & Portals along trajectory -->
+                        <!-- Start Cloud Harbor (0%) -->
+                        <g class="launch-harbor">
+                            <ellipse cx="40" cy="120" rx="26" ry="7" fill="rgba(0, 245, 212, 0.12)"
+                                stroke="rgba(0, 245, 212, 0.5)" stroke-width="1" />
+                            <path d="M 24,120 Q 40,113 56,120" stroke="#00f5d4" stroke-width="1.5" fill="none"
+                                stroke-linecap="round" />
+                            <text x="40" y="137" text-anchor="middle" fill="#00f5d4"
+                                font-family="'Space Mono', monospace" font-size="7.5" font-weight="700"
+                                letter-spacing="1">LAUNCH</text>
+                        </g>
+
+                        <!-- Gate 1 (30%) -->
+                        <g id="gate1" class="flight-gate">
+                            <ellipse cx="175" cy="45" rx="14" ry="24" fill="none" stroke="rgba(56, 189, 248, 0.45)"
+                                stroke-width="1.5" stroke-dasharray="3,3" />
+                            <text x="175" y="15" text-anchor="middle" fill="rgba(255,255,255,0.6)"
+                                font-family="'Space Mono', monospace" font-size="7.5">GATE 30%</text>
+                        </g>
+
+                        <!-- Gate 2 (70%) -->
+                        <g id="gate2" class="flight-gate">
+                            <ellipse cx="305" cy="112" rx="14" ry="24" fill="none" stroke="rgba(192, 132, 252, 0.45)"
+                                stroke-width="1.5" stroke-dasharray="3,3" />
+                            <text x="305" y="146" text-anchor="middle" fill="rgba(255,255,255,0.6)"
+                                font-family="'Space Mono', monospace" font-size="7.5">GATE 70%</text>
+                        </g>
+
+                        <!-- Destination Warp Portal (100%) -->
+                        <g id="warpPortal" class="destination-portal">
+                            <circle cx="455" cy="75" r="28" fill="rgba(255, 209, 102, 0.08)" />
+                            <ellipse cx="455" cy="75" rx="12" ry="28" class="portal-outer-ring" fill="none"
+                                stroke="#ffd166" stroke-width="2" stroke-dasharray="6,4" />
+                            <ellipse cx="455" cy="75" rx="8" ry="20" class="portal-inner-ring" fill="none"
+                                stroke="#ff7b9d" stroke-width="1.5" stroke-dasharray="4,3" />
+                            <circle cx="455" cy="75" r="5" class="portal-core" fill="#ffffff" />
+                            <text x="455" y="116" text-anchor="middle" fill="#ffd166"
+                                font-family="'Space Mono', monospace" font-size="7.5" font-weight="700"
+                                letter-spacing="1">GATEWAY</text>
+                        </g>
+
+                        <!-- Swooping Flight Paths -->
+                        <path id="flightSkyGuide"
+                            d="M 40,115 C 75,88 120,45 175,45 C 230,45 250,112 305,112 C 360,112 390,50 455,75"
+                            class="sky-guide-path" />
+                        <path id="flightSkyTrail"
+                            d="M 40,115 C 75,88 120,45 175,45 C 230,45 250,112 305,112 C 360,112 390,50 455,75"
+                            class="sky-active-trail" />
+
+                        <!-- Dynamic Flight Vessel Group -->
+                        <g id="flightVessel" class="flight-vessel" transform="translate(40, 115) rotate(-38)">
+
+                            <!-- 1. ORIGAMI PAPER DRAGON -->
+                            <g id="vesselDragon" class="vessel-dragon">
+                                <!-- Back Wing (Folded & Layered) -->
+                                <g class="dragon-wing-back">
+                                    <polygon points="4,-4 18,-26 -4,-28 -2,-4" fill="url(#dragonWingG2)" opacity="0.85"
+                                        stroke="rgba(255,255,255,0.5)" stroke-width="0.6" />
+                                    <polygon points="18,-26 28,-18 10,-12 4,-4" fill="url(#dragonWingG1)"
+                                        opacity="0.8" />
+                                </g>
+
+                                <!-- Tail with Undulating Sway -->
+                                <g class="dragon-tail">
+                                    <polygon points="-28,-4 -26,5 -40,3 -42,-2" fill="url(#dragonSkin)"
+                                        stroke="rgba(255,255,255,0.4)" stroke-width="0.6" />
+                                    <polygon points="-42,-2 -40,3 -54,0" fill="url(#dragonSkin)"
+                                        stroke="rgba(255,255,255,0.4)" stroke-width="0.5" />
+                                    <!-- Origami tail fin feathers -->
+                                    <polygon points="-48,-1 -62,-10 -46,-4" fill="url(#dragonHorn)" opacity="0.9" />
+                                    <polygon points="-48,1 -62,10 -46,4" fill="url(#dragonUnder)" opacity="0.9" />
+                                    <polygon points="-52,0 -66,0 -50,1" fill="#ffffff" opacity="0.8" />
+                                </g>
+
+                                <!-- Torso Segments -->
+                                <polygon points="-14,-5 -12,7 -26,5 -28,-4" fill="url(#dragonSkin)"
+                                    stroke="rgba(255,255,255,0.5)" stroke-width="0.75" />
+                                <polygon points="0,-6 2,8 -12,7 -14,-5" fill="url(#dragonSkin)"
+                                    stroke="rgba(255,255,255,0.5)" stroke-width="0.75" />
+                                <polygon points="2,8 -12,7 -10,10 4,11" fill="url(#dragonUnder)"
+                                    stroke="rgba(255,255,255,0.4)" stroke-width="0.5" />
+                                <polygon points="12,-7 14,7 2,8 0,-6" fill="url(#dragonSkin)"
+                                    stroke="rgba(255,255,255,0.6)" stroke-width="0.75" />
+                                <polygon points="14,7 2,8 4,11 12,10" fill="url(#dragonUnder)"
+                                    stroke="rgba(255,255,255,0.4)" stroke-width="0.5" />
+
+                                <!-- Front Wing with Active Flap Beat -->
+                                <g class="dragon-wing-front">
+                                    <polygon points="6,-6 22,-32 -4,-34 -2,-6" fill="url(#dragonWingG1)"
+                                        stroke="rgba(255,255,255,0.8)" stroke-width="0.75" />
+                                    <polygon points="22,-32 34,-22 14,-14 6,-6" fill="url(#dragonWingG2)"
+                                        stroke="rgba(255,255,255,0.6)" stroke-width="0.6" />
+                                    <polygon points="-4,-34 -18,-24 -8,-12 -2,-6" fill="url(#dragonSkin)"
+                                        stroke="rgba(255,255,255,0.5)" stroke-width="0.6" />
+                                    <!-- Wing fold crease highlights -->
+                                    <line x1="6" y1="-6" x2="22" y2="-32" stroke="#ffffff" stroke-width="0.8"
+                                        stroke-linecap="round" opacity="0.9" />
+                                    <line x1="6" y1="-6" x2="-4" y2="-34" stroke="rgba(255,255,255,0.6)"
+                                        stroke-width="0.6" stroke-linecap="round" />
+                                </g>
+
+                                <!-- Dragon Head & Whiskers -->
+                                <g class="dragon-head">
+                                    <polygon points="12,-7 26,-4 32,1 18,5 14,7 12,-7" fill="url(#dragonSkin)"
+                                        stroke="rgba(255,255,255,0.7)" stroke-width="0.75" />
+                                    <polygon points="26,-4 34,0 32,1" fill="#fef08a" />
+                                    <!-- Golden Horns -->
+                                    <polygon points="14,-6 18,-18 10,-8" fill="url(#dragonHorn)"
+                                        stroke="rgba(255,255,255,0.7)" stroke-width="0.5" />
+                                    <polygon points="10,-6 13,-15 7,-7" fill="#f59e0b" opacity="0.85" />
+                                    <!-- Crystal Eye -->
+                                    <circle cx="21" cy="-1" r="1.8" fill="#ffd166" />
+                                    <circle cx="21.4" cy="-1.2" r="0.8" fill="#ffffff" />
+                                    <!-- Whiskers -->
+                                    <path d="M 26,1 Q 34,7 42,4" stroke="#00f5d4" stroke-width="1.2" fill="none"
+                                        stroke-linecap="round" opacity="0.95" />
+                                    <path d="M 24,3 Q 32,10 38,12" stroke="#38bdf8" stroke-width="0.9" fill="none"
+                                        stroke-linecap="round" opacity="0.75" />
+                                    <!-- Nose Stardust Ember -->
+                                    <circle cx="35" cy="0" r="1.5" fill="#fef08a" class="dragon-ember" />
+                                </g>
+
+                                <!-- Trailing Magic Embers -->
+                                <g class="dragon-magic-trail">
+                                    <circle cx="-16" cy="-12" r="1.2" fill="#00f5d4" class="sparkle-1" />
+                                    <circle cx="-28" cy="8" r="1.5" fill="#ffd166" class="sparkle-2" />
+                                    <circle cx="-42" cy="-6" r="1.2" fill="#c084fc" class="sparkle-3" />
+                                    <circle cx="-56" cy="4" r="1.8" fill="#38bdf8" class="sparkle-4" />
+                                </g>
+                            </g>
+
+                            <!-- 2. ORIGAMI PAPER AEROPLANE (JET) -->
+                            <g id="vesselPlane" class="vessel-plane hidden-vessel">
+                                <!-- Top / Starboard Delta Wing -->
+                                <polygon points="34,0 -18,-24 -6,-2" fill="url(#planePaperBody)"
+                                    stroke="rgba(255,255,255,0.9)" stroke-width="0.75" />
+                                <polygon points="34,0 -6,-2 -18,0" fill="url(#planePaperShadow)" opacity="0.45" />
+                                <polygon points="-18,-24 -24,-20 -14,-18" fill="url(#planeAccent)" />
+                                <line x1="34" y1="0" x2="-18" y2="-24" stroke="rgba(255,255,255,0.9)"
+                                    stroke-width="0.8" />
+
+                                <!-- Bottom / Port Delta Wing -->
+                                <polygon points="34,0 -18,24 -6,2" fill="url(#planePaperBody)"
+                                    stroke="rgba(255,255,255,0.75)" stroke-width="0.75" />
+                                <polygon points="34,0 -6,2 -18,0" fill="url(#planePaperShadow)" opacity="0.65" />
+                                <polygon points="-18,24 -24,20 -14,18" fill="url(#planeAccent)" />
+                                <line x1="34" y1="0" x2="-18" y2="24" stroke="rgba(255,255,255,0.7)"
+                                    stroke-width="0.8" />
+
+                                <!-- Center Fuselage Spine & Cockpit Fold -->
+                                <polygon points="34,0 -18,0 -8,-5" fill="url(#planePaperBody)"
+                                    stroke="rgba(255,255,255,0.85)" stroke-width="0.75" />
+                                <polygon points="34,0 -8,-5 12,0" fill="url(#planeAccent)" opacity="0.85" />
+                                <line x1="34" y1="0" x2="-18" y2="0" stroke="#38bdf8" stroke-width="1.2"
+                                    stroke-linecap="round" />
+
+                                <!-- Pulsing Jet Afterburner Flame -->
+                                <polygon points="-18,-5 -42,0 -18,5" fill="url(#jetFire)" class="jet-afterburner" />
+                                <circle cx="-18" cy="0" r="3.5" fill="#00f5d4" opacity="0.9" />
+                                <circle cx="-18" cy="0" r="1.8" fill="#ffffff" />
+
+                                <!-- Wingtip Vapor Streamers -->
+                                <path d="M -24,-20 Q -38,-22 -52,-20" stroke="rgba(0, 245, 212, 0.6)" stroke-width="1.2"
+                                    fill="none" stroke-dasharray="3,3" />
+                                <path d="M -24,20 Q -38,22 -52,20" stroke="rgba(121, 40, 202, 0.6)" stroke-width="1.2"
+                                    fill="none" stroke-dasharray="3,3" />
+                            </g>
+
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Flight Deck Footer: Hint & Test Flight Trigger -->
+                <div class="flight-deck-footer">
+                    <span id="uploadProgressHint" class="progress-hint">Your share link is being prepared.</span>
+                    <button type="button" id="previewFlightBtn" class="preview-flight-btn"
+                        title="Preview the flight animation">
+                        ✦ Test Flight
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -30,15 +355,37 @@
                 <input id="themeToggle" type="checkbox">
                 <div class="slider round">
                     <div class="sun-moon">
-                        <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                        <svg id="moon-dot-2" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                        <svg id="moon-dot-3" class="moon-dot" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
+                        <svg id="moon-dot-1" class="moon-dot" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="50"></circle>
+                        </svg>
+                        <svg id="moon-dot-2" class="moon-dot" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="50"></circle>
+                        </svg>
+                        <svg id="moon-dot-3" class="moon-dot" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="50"></circle>
+                        </svg>
                     </div>
                     <div class="stars">
-                        <svg id="star-1" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
-                        <svg id="star-2" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
-                        <svg id="star-3" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
-                        <svg id="star-4" class="star" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"></path></svg>
+                        <svg id="star-1" class="star" viewBox="0 0 20 20">
+                            <path
+                                d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z">
+                            </path>
+                        </svg>
+                        <svg id="star-2" class="star" viewBox="0 0 20 20">
+                            <path
+                                d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z">
+                            </path>
+                        </svg>
+                        <svg id="star-3" class="star" viewBox="0 0 20 20">
+                            <path
+                                d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z">
+                            </path>
+                        </svg>
+                        <svg id="star-4" class="star" viewBox="0 0 20 20">
+                            <path
+                                d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z">
+                            </path>
+                        </svg>
                     </div>
                 </div>
             </label>
@@ -53,20 +400,24 @@
         <div id="initialView">
             <div id="retrieveSection">
                 <form id="retrieveForm">
-                    <input type="text" id="codeInput" maxlength="6" minlength="6" pattern="[A-Z]{6}" placeholder="Enter share code..." required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();">
+                    <input type="text" id="codeInput" maxlength="6" minlength="6" pattern="[A-Z]{6}"
+                        placeholder="Enter share code..." required style="text-transform: uppercase;"
+                        oninput="this.value = this.value.toUpperCase();">
                     <button type="submit">Get Content</button>
                 </form>
                 <div id="retrieveResult" class="hidden"></div>
             </div>
             <div id="shareSection" class="section">
                 <form id="uploadForm">
-                    <textarea id="textContent" name="text_content" rows="5" placeholder="Paste text snippet here..."></textarea>
+                    <textarea id="textContent" name="text_content" rows="5"
+                        placeholder="Paste text snippet here..."></textarea>
                     <div id="dropZone" class="drop-zone">
                         <p><strong>Drag & drop a file here</strong> or click to select</p>
                         <input type="file" id="fileInput" name="file" class="hidden" multiple>
                     </div>
                     <button id="generateBtn" type="submit" style="margin-top: 20px;">Generate Code</button>
-                    <button id="updateBtn" type="button" class="hidden" style="margin-top: 20px;" disabled>Update Text</button>
+                    <button id="updateBtn" type="button" class="hidden" style="margin-top: 20px;" disabled>Update
+                        Text</button>
                 </form>
                 <div id="uploadResult" class="hidden"></div>
             </div>
@@ -76,21 +427,25 @@
     <section class="info-grid under-card">
         <article class="info-card reveal">
             <h2>About</h2>
-            <p>Quick Share lets you upload text snippets or files and instantly create a short share code. Anyone with that code can preview and download your content.</p>
+            <p>Quick Share lets you upload text snippets or files and instantly create a short share code. Anyone with
+                that code can preview and download your content.</p>
         </article>
         <article class="info-card reveal delay-1">
             <h2>How To Use</h2>
-            <p><b>1.</b> Add text or drop files. <b>2.</b> Generate your code. <b>3.</b> Share the code. <b>4.</b> Receiver enters the code to access the content securely.</p>
+            <p><b>1.</b> Add text or drop files. <b>2.</b> Generate your code. <b>3.</b> Share the code. <b>4.</b>
+                Receiver enters the code to access the content securely.</p>
         </article>
     </section>
 
     <footer>
         <p>© 2026 Quick Share | All rights reserved.</p>
         <div class="contact footer-actions">
-            <a class="social-link" href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <a class="social-link" href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer"
+                aria-label="LinkedIn">
                 <img src="linkedin.png" class="contact-icon" alt="LinkedIn">
             </a>
-            <a class="social-link" href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+            <a class="social-link" href="https://github.com" target="_blank" rel="noopener noreferrer"
+                aria-label="GitHub">
                 <img src="github.png" class="contact-icon" alt="GitHub">
             </a>
             <a class="social-link" href="mailto:rohitadak0@gmail.com" aria-label="Gmail">
@@ -127,7 +482,7 @@
         // for run locally
         // const API_BASE_URL = "/backend";
         const API_BASE_URL = "https://optimize-pamela-optional-physician.trycloudflare.com";
-        
+
         // ✨ --- 3. JAVASCRIPT FOR LOADER & THEME --- ✨
         const loaderContainer = document.getElementById('loaderContainer');
         const themeToggle = document.getElementById('themeToggle');
@@ -137,9 +492,269 @@
         // const contactForm = document.getElementById('contactForm');
         // const contactStatus = document.getElementById('contactStatus');
 
-        // Loader functions
-        const showLoader = () => loaderContainer.classList.remove('hidden');
-        const hideLoader = () => loaderContainer.classList.add('hidden');
+        // =========================================================
+        // ✨ QUICK SHARE SKYWAY FLIGHT CONTROLLER (DRAGON / JET) ✨
+        // =========================================================
+        let flightMode = localStorage.getItem('quickshare_flyer_mode') || 'dragon';
+        let currentFlightPercent = 0;
+        let targetFlightPercent = 0;
+        let flightRafId = null;
+        let previewSimTimeouts = [];
+
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadPercent = document.getElementById('uploadPercent');
+        const uploadProgressTrack = document.getElementById('uploadProgressTrack');
+        const uploadProgressLabel = document.getElementById('uploadProgressLabel');
+        const uploadProgressHint = document.getElementById('uploadProgressHint');
+        const flightSkyGuide = document.getElementById('flightSkyGuide');
+        const flightSkyTrail = document.getElementById('flightSkyTrail');
+        const flightVessel = document.getElementById('flightVessel');
+        const vesselDragon = document.getElementById('vesselDragon');
+        const vesselPlane = document.getElementById('vesselPlane');
+        const btnModeDragon = document.getElementById('btnModeDragon');
+        const btnModePlane = document.getElementById('btnModePlane');
+        const hudOrbitProgress = document.getElementById('hudOrbitProgress');
+        const flightAltitude = document.getElementById('flightAltitude');
+        const flightVelocity = document.getElementById('flightVelocity');
+        const flightStatus = document.getElementById('flightStatus');
+        const previewFlightBtn = document.getElementById('previewFlightBtn');
+        const gate1 = document.getElementById('gate1');
+        const gate2 = document.getElementById('gate2');
+        const warpPortal = document.getElementById('warpPortal');
+
+        // Flyer Switcher
+        function setFlyerMode(mode) {
+            flightMode = mode;
+            try {
+                localStorage.setItem('quickshare_flyer_mode', mode);
+            } catch (e) {
+                // Ignore localStorage errors in private windows
+            }
+
+            if (mode === 'dragon') {
+                btnModeDragon?.classList.add('active');
+                btnModeDragon?.setAttribute('aria-selected', 'true');
+                btnModePlane?.classList.remove('active');
+                btnModePlane?.setAttribute('aria-selected', 'false');
+                vesselDragon?.classList.remove('hidden-vessel');
+                vesselPlane?.classList.add('hidden-vessel');
+            } else {
+                btnModePlane?.classList.add('active');
+                btnModePlane?.setAttribute('aria-selected', 'true');
+                btnModeDragon?.classList.remove('active');
+                btnModeDragon?.setAttribute('aria-selected', 'false');
+                vesselPlane?.classList.remove('hidden-vessel');
+                vesselDragon?.classList.add('hidden-vessel');
+            }
+
+            // Refresh status headline with new mode
+            updateFlightLabels(currentFlightPercent);
+        }
+
+        btnModeDragon?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setFlyerMode('dragon');
+        });
+
+        btnModePlane?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setFlyerMode('plane');
+        });
+
+        // Initialize mode on load
+        setFlyerMode(flightMode);
+
+        function updateFlightLabels(p) {
+            if (!uploadProgressLabel) return;
+            if (p === 0) {
+                uploadProgressLabel.textContent = 'Igniting Sky Thrusters...';
+            } else if (p < 25) {
+                uploadProgressLabel.textContent = flightMode === 'dragon'
+                    ? 'Origami Dragon ascending into clouds...'
+                    : 'Origami Jet rocketing past cloud deck...';
+            } else if (p < 65) {
+                uploadProgressLabel.textContent = flightMode === 'dragon'
+                    ? 'Riding mystical stardust jetstream...'
+                    : 'Cruising through gate at Mach 3.4...';
+            } else if (p < 95) {
+                uploadProgressLabel.textContent = flightMode === 'dragon'
+                    ? 'Dragon diving toward destination portal...'
+                    : 'Approaching celestial warp gateway...';
+            } else {
+                uploadProgressLabel.textContent = 'Touchdown! Finalizing share code...';
+            }
+        }
+
+        function renderFlightState(percent) {
+            const p = Math.max(0, Math.min(100, percent));
+
+            // 1. Text percentage
+            if (uploadPercent) {
+                uploadPercent.textContent = `${Math.round(p)}%`;
+            }
+
+            // 2. Orbital HUD ring (r=36 -> Circumference = 226.2)
+            if (hudOrbitProgress) {
+                const circ = 226.2;
+                hudOrbitProgress.style.strokeDashoffset = circ * (1 - p / 100);
+            }
+
+            // 3. Trajectory path and tangent alignment
+            if (flightSkyGuide && flightSkyTrail && flightVessel) {
+                try {
+                    const totalLen = flightSkyGuide.getTotalLength();
+                    const travelDist = (p / 100) * totalLen;
+
+                    flightSkyTrail.style.strokeDasharray = totalLen;
+                    flightSkyTrail.style.strokeDashoffset = totalLen * (1 - p / 100);
+
+                    const pt = flightSkyGuide.getPointAtLength(travelDist);
+                    const lookDist = Math.min(totalLen, travelDist + 3);
+                    const ptNext = flightSkyGuide.getPointAtLength(lookDist);
+                    const angle = Math.atan2(ptNext.y - pt.y, ptNext.x - pt.x) * (180 / Math.PI);
+
+                    flightVessel.setAttribute('transform', `translate(${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}) rotate(${angle.toFixed(2)})`);
+                } catch (e) {
+                    // Geometry not ready when container is initially hidden
+                }
+            }
+
+            // 4. Waypoint gates activation
+            if (gate1) gate1.classList.toggle('active-gate', p >= 28);
+            if (gate2) gate2.classList.toggle('active-gate', p >= 65);
+            if (warpPortal) warpPortal.classList.toggle('active-portal', p >= 96);
+
+            // 5. Live Telemetry
+            if (flightAltitude) {
+                flightAltitude.textContent = `${Math.round(2400 + p * 360).toLocaleString()} FT`;
+            }
+            if (flightVelocity) {
+                flightVelocity.textContent = `MACH ${(1.2 + (p / 100) * 3.8).toFixed(1)}`;
+            }
+            if (flightStatus) {
+                if (p < 20) flightStatus.textContent = 'LAUNCHING';
+                else if (p < 55) flightStatus.textContent = 'CLIMBING';
+                else if (p < 85) flightStatus.textContent = 'SUPERSONIC';
+                else if (p < 100) flightStatus.textContent = 'APPROACHING';
+                else flightStatus.textContent = 'TOUCHDOWN';
+            }
+
+            // 6. Dynamic status label & hint
+            updateFlightLabels(p);
+
+            if (uploadProgressHint) {
+                uploadProgressHint.textContent = p >= 100
+                    ? 'Almost there. Creating your instant share link.'
+                    : 'Your payload is soaring securely across the skyway.';
+            }
+
+            if (uploadProgress) {
+                uploadProgress.classList.toggle('completed', p >= 100);
+            }
+        }
+
+        function tickFlight() {
+            const diff = targetFlightPercent - currentFlightPercent;
+            if (Math.abs(diff) > 0.15) {
+                currentFlightPercent += diff * 0.12;
+                renderFlightState(currentFlightPercent);
+                flightRafId = requestAnimationFrame(tickFlight);
+            } else {
+                currentFlightPercent = targetFlightPercent;
+                renderFlightState(currentFlightPercent);
+                flightRafId = null;
+            }
+        }
+
+        const setUploadProgress = (percent) => {
+            targetFlightPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+            if (!flightRafId) {
+                flightRafId = requestAnimationFrame(tickFlight);
+            }
+        };
+
+        const showLoader = (showProgress = false) => {
+            clearPreviewSimulation();
+            currentFlightPercent = 0;
+            targetFlightPercent = 0;
+            renderFlightState(0);
+            uploadProgress?.classList.toggle('hidden', !showProgress);
+            loaderContainer?.classList.toggle('upload-mode', showProgress);
+            loaderContainer?.classList.remove('hidden');
+
+            if (showProgress) {
+                // Ensure SVG geometry calculations are initialized
+                requestAnimationFrame(() => renderFlightState(0));
+            }
+        };
+
+        const hideLoader = () => {
+            clearPreviewSimulation();
+            if (flightRafId) cancelAnimationFrame(flightRafId);
+            flightRafId = null;
+            loaderContainer?.classList.add('hidden');
+            loaderContainer?.classList.remove('upload-mode');
+        };
+
+        function clearPreviewSimulation() {
+            previewSimTimeouts.forEach(t => clearTimeout(t));
+            previewSimTimeouts = [];
+        }
+
+        // Test Flight Replay Simulation
+        function runTestFlight() {
+            clearPreviewSimulation();
+            currentFlightPercent = 0;
+            targetFlightPercent = 0;
+            renderFlightState(0);
+
+            const simSteps = [
+                { p: 18, delay: 250 },
+                { p: 38, delay: 750 },
+                { p: 62, delay: 1400 },
+                { p: 84, delay: 2100 },
+                { p: 96, delay: 2800 },
+                { p: 100, delay: 3500 }
+            ];
+
+            simSteps.forEach(step => {
+                const timeoutId = setTimeout(() => {
+                    setUploadProgress(step.p);
+                }, step.delay);
+                previewSimTimeouts.push(timeoutId);
+            });
+        }
+
+        previewFlightBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            runTestFlight();
+        });
+
+        function uploadWithProgress(url, formData) {
+            return new Promise((resolve, reject) => {
+                const request = new XMLHttpRequest();
+                request.open('POST', url);
+                request.upload.addEventListener('progress', (event) => {
+                    if (event.lengthComputable) {
+                        setUploadProgress(Math.round((event.loaded / event.total) * 100));
+                    }
+                });
+                request.addEventListener('load', () => {
+                    if (request.status >= 200 && request.status < 300) {
+                        try {
+                            resolve({ json: () => Promise.resolve(JSON.parse(request.responseText)) });
+                        } catch {
+                            reject(new Error('The server returned an invalid response.'));
+                        }
+                    } else {
+                        reject(new Error(request.responseText || 'Upload failed!'));
+                    }
+                });
+                request.addEventListener('error', () => reject(new Error('Upload failed. Please check your connection.')));
+                request.addEventListener('abort', () => reject(new Error('Upload was cancelled.')));
+                request.send(formData);
+            });
+        }
 
         // Loader on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -151,9 +766,9 @@
         });
 
         // Loader during async operations
-        async function handleAsyncOperation(asyncFunc) {
+        async function handleAsyncOperation(asyncFunc, showProgress = false) {
             try {
-                showLoader();
+                showLoader(showProgress);
                 await asyncFunc();
             } catch (err) {
                 console.error(err);
@@ -221,9 +836,9 @@
                 closeContactModal();
             }
         });
-        
+
         // --- The rest of your original JavaScript is below ---
-        
+
         const initialView = document.getElementById('initialView');
         const contentView = document.getElementById('contentView');
         const retrieveForm = document.getElementById('retrieveForm');
@@ -236,7 +851,7 @@
         const textContent = document.getElementById('textContent');
         const generateBtn = document.getElementById('generateBtn');
         const updateBtn = document.getElementById('updateBtn');
-        
+
         let currentCode = null;
         let originalText = "";
 
@@ -247,7 +862,7 @@
             retrieveResult.classList.add('hidden');
             uploadResult.classList.add('hidden');
             codeInput.value = '';
-            
+
             currentCode = null;
             originalText = "";
             uploadForm.reset();
@@ -256,7 +871,7 @@
             dropZone.classList.remove('hidden');
             dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
         }
-        
+
         function showContentView() {
             initialView.classList.add('hidden');
             contentView.classList.remove('hidden');
@@ -266,7 +881,80 @@
             element.innerHTML = `<div class="result-message ${isError ? 'result-error' : 'result-success'}">${message}</div>`;
             element.classList.remove('hidden');
         }
-        
+
+        function renderUploadSuccess(code, headline, detailsHtml, viewUrl, saveToStorage = true) {
+            if (saveToStorage) {
+                try {
+                    sessionStorage.setItem('quickshare_saved_upload', JSON.stringify({
+                        code,
+                        headline,
+                        detailsHtml,
+                        viewUrl,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {}
+            }
+
+            uploadResult.innerHTML = `
+                <div class="result-message result-success" style="text-align: left;">
+                    <p style="margin: 0 0 10px; font-weight: 600; font-size: 1rem;">${headline}</p>
+                    <div style="background: rgba(0, 0, 0, 0.22); border: 1px dashed var(--accent-violet, #8b5cf6); border-radius: 12px; padding: 14px 18px; margin: 12px 0; text-align: center;">
+                        <span style="font-size: 0.8rem; color: var(--subtle-text, #94a3b8); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Your Share Code</span>
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 6px; flex-wrap: wrap;">
+                            <h2 style="letter-spacing: 4px; margin: 0; font-size: 2.2rem; color: var(--accent-color, #7090cc); font-family: monospace;">${code}</h2>
+                            <button type="button" id="copyShareCodeBtn" class="button" style="width: auto; padding: 6px 14px; font-size: 0.85rem; margin: 0;">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    ${detailsHtml ? `<div style="margin: 10px 0;">${detailsHtml}</div>` : ''}
+                    <div style="margin-top: 14px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                        <a href="${viewUrl}" target="_blank" class="button button-secondary" style="width: auto; padding: 8px 18px; text-decoration: none;">
+                            🔗 Open Sharable Link
+                        </a>
+                        <button type="button" id="dismissShareCodeBtn" class="button button-secondary" style="width: auto; padding: 8px 14px;">
+                            ✕ Dismiss
+                        </button>
+                    </div>
+                </div>
+            `;
+            uploadResult.classList.remove('hidden');
+
+            const copyBtn = document.getElementById('copyShareCodeBtn');
+            if (copyBtn) {
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(code).then(() => {
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+                    });
+                };
+            }
+
+            const dismissBtn = document.getElementById('dismissShareCodeBtn');
+            if (dismissBtn) {
+                dismissBtn.onclick = clearSavedUpload;
+            }
+        }
+
+        function restoreSavedUpload() {
+            try {
+                const saved = sessionStorage.getItem('quickshare_saved_upload');
+                if (!saved) return;
+                const data = JSON.parse(saved);
+                if (Date.now() - data.timestamp < 3600000) {
+                    renderUploadSuccess(data.code, data.headline, data.detailsHtml, data.viewUrl, false);
+                }
+            } catch (e) {}
+        }
+
+        function clearSavedUpload() {
+            try {
+                sessionStorage.removeItem('quickshare_saved_upload');
+            } catch (e) {}
+            uploadResult.classList.add('hidden');
+            uploadResult.innerHTML = '';
+        }
+
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
@@ -279,7 +967,7 @@
                 const fileNames = Array.from(e.dataTransfer.files).map(f => f.name).join(', ');
                 dropZone.querySelector('p').textContent = `${fileNames} selected`;
 
-                textContent.value = ""; 
+                textContent.value = "";
             }
         });
         fileInput.addEventListener('change', () => {
@@ -289,7 +977,134 @@
                 textContent.value = "";
             }
         });
-        
+
+        function renderFilePreview(fileName, fileUrl, onBack) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const downloadUrl = `${fileUrl}${fileUrl.includes('?') ? '&' : '?'}download=true`;
+
+            contentView.innerHTML = `
+                <div class="file-preview-card" style="margin-top: 15px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 style="margin: 0; font-size: 1.35rem; color: var(--text-color, #fff); display: flex; align-items: center; gap: 8px;">
+                                <span>👁️</span> <span style="word-break: break-all;">${fileName}</span>
+                            </h2>
+                            <span style="font-size: 0.85rem; color: var(--accent-color, #7090cc); font-weight: 600; text-transform: uppercase;">${ext} preview</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="${downloadUrl}" download="${fileName}" class="button" style="width: auto; padding: 10px 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem;">
+                                ⬇️ Download File
+                            </a>
+                        </div>
+                    </div>
+                    <div id="previewMediaContainer" class="preview-media-box">
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" id="previewBackBtn" class="button button-secondary" style="width: auto; padding: 10px 24px;">
+                            ← Back
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const mediaContainer = document.getElementById('previewMediaContainer');
+            const backBtn = document.getElementById('previewBackBtn');
+            if (backBtn && onBack) {
+                backBtn.onclick = onBack;
+            }
+
+            // 1. Image Formats
+            if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext)) {
+                const img = document.createElement('img');
+                img.src = fileUrl;
+                img.alt = fileName;
+                img.style.maxWidth = "100%";
+                img.style.maxHeight = "550px";
+                img.style.objectFit = "contain";
+                img.style.borderRadius = "10px";
+                img.style.boxShadow = "0 4px 14px rgba(0,0,0,0.25)";
+                mediaContainer.appendChild(img);
+            }
+            // 2. PDF Documents - Use iframe so browser displays it inline without forcing download
+            else if (ext === "pdf") {
+                mediaContainer.style.padding = "0";
+                mediaContainer.style.background = "#fff";
+                const iframe = document.createElement('iframe');
+                iframe.src = fileUrl;
+                iframe.title = fileName;
+                iframe.style.width = "100%";
+                iframe.style.height = "550px";
+                iframe.style.border = "none";
+                iframe.style.borderRadius = "12px";
+                mediaContainer.appendChild(iframe);
+            }
+            // 3. Video Formats
+            else if (["mp4", "webm", "ogg", "mov"].includes(ext)) {
+                const video = document.createElement('video');
+                video.src = fileUrl;
+                video.controls = true;
+                video.style.maxWidth = "100%";
+                video.style.maxHeight = "500px";
+                video.style.borderRadius = "10px";
+                mediaContainer.appendChild(video);
+            }
+            // 4. Audio Formats
+            else if (["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(ext)) {
+                const audio = document.createElement('audio');
+                audio.src = fileUrl;
+                audio.controls = true;
+                audio.style.width = "100%";
+                audio.style.maxWidth = "520px";
+                mediaContainer.appendChild(audio);
+            }
+            // 5. Text & Source Code Formats
+            else if (["txt", "md", "json", "js", "ts", "html", "css", "py", "java", "c", "cpp", "cs", "sql", "sh", "xml", "yaml", "yml", "log", "csv", "env", "ini"].includes(ext)) {
+                mediaContainer.innerHTML = '<p style="color: var(--text-color, #e0e0e0);">Loading preview...</p>';
+                fetch(fileUrl)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Could not read file contents');
+                        return res.text();
+                    })
+                    .then(text => {
+                        mediaContainer.innerHTML = '';
+                        mediaContainer.style.display = 'block';
+                        const pre = document.createElement('pre');
+                        pre.textContent = text;
+                        pre.style.margin = '0';
+                        pre.style.padding = '14px';
+                        pre.style.fontSize = '13px';
+                        pre.style.fontFamily = "'Fira Code', 'Consolas', monospace";
+                        pre.style.whiteSpace = 'pre-wrap';
+                        pre.style.wordBreak = 'break-word';
+                        pre.style.maxHeight = '500px';
+                        pre.style.overflowY = 'auto';
+                        pre.style.color = '#e2e8f0';
+                        pre.style.background = 'rgba(15, 23, 42, 0.85)';
+                        pre.style.border = '1px solid var(--glass-border)';
+                        pre.style.borderRadius = '8px';
+                        mediaContainer.appendChild(pre);
+                    })
+                    .catch(err => {
+                        mediaContainer.innerHTML = `<p style="color: #ef4444;">Unable to load text preview: ${err.message}</p>`;
+                    });
+            }
+            // 6. Non-inline previewable file formats (zip, docx, exe, etc.)
+            else {
+                mediaContainer.innerHTML = `
+                    <div style="text-align: center; padding: 30px 15px;">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📁</div>
+                        <h4 style="margin: 0 0 8px; color: var(--text-color, #fff);">Inline preview not available</h4>
+                        <p style="margin: 0 0 18px; color: var(--text-muted, #94a3b8); font-size: 0.9rem;">
+                            This file format (.${ext}) cannot be displayed directly in the browser.
+                        </p>
+                        <a href="${downloadUrl}" download="${fileName}" class="button" style="width: auto; padding: 10px 24px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            ⬇️ Download ${fileName}
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
         retrieveForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const code = codeInput.value.trim().toUpperCase();
@@ -314,6 +1129,13 @@
                         grid.style.gap = "20px";
                         grid.style.marginTop = "20px";
 
+                        const backBtn = document.createElement('button');
+                        backBtn.type = 'button';
+                        backBtn.textContent = 'Share or Get Another';
+                        backBtn.className = 'button button-secondary';
+                        backBtn.style.marginTop = '20px';
+                        backBtn.onclick = showInitialView;
+
                         for (const f of data.files) {
                             const fileUrl = `${API_BASE_URL}/get_multiple/${code}/${f}`;
                             const ext = f.split('.').pop().toLowerCase();
@@ -329,113 +1151,81 @@
                             card.onmouseenter = () => (card.style.transform = "scale(1.03)");
                             card.onmouseleave = () => (card.style.transform = "scale(1)");
 
-                            // 🖼️ Show image preview if image
-                            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+                            // 🖼️ Thumbnail preview in card
+                            if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) {
                                 const img = document.createElement('img');
                                 img.src = fileUrl;
                                 img.alt = f;
                                 img.style.maxWidth = "100%";
+                                img.style.maxHeight = "120px";
+                                img.style.objectFit = "cover";
                                 img.style.borderRadius = "8px";
                                 img.style.marginBottom = "8px";
                                 card.appendChild(img);
-                            } 
-                            // 📄 For text/pdf files, show an icon or small preview
-                            else if (["txt", "md"].includes(ext)) {
-                                const res = await fetch(fileUrl);
-                                const text = await res.text();
+                            }
+                            // 📄 For text/code files, show a small preview snippet
+                            else if (["txt", "md", "json", "js", "ts", "py", "html", "css", "csv"].includes(ext)) {
                                 const snippet = document.createElement('pre');
-                                snippet.textContent = text.slice(0, 200) + (text.length > 200 ? "..." : "");
+                                snippet.textContent = "Loading preview...";
                                 snippet.style.fontSize = "12px";
                                 snippet.style.textAlign = "left";
                                 snippet.style.whiteSpace = "pre-wrap";
-                                snippet.style.maxHeight = "120px";
+                                snippet.style.maxHeight = "100px";
                                 snippet.style.overflowY = "auto";
                                 snippet.style.background = "rgba(255,255,255,0.05)";
                                 snippet.style.padding = "8px";
                                 snippet.style.borderRadius = "6px";
                                 card.appendChild(snippet);
-                            } 
-                            // 📎 For other file types
+
+                                fetch(fileUrl)
+                                    .then(res => res.text())
+                                    .then(text => {
+                                        snippet.textContent = text.slice(0, 180) + (text.length > 180 ? "..." : "");
+                                    })
+                                    .catch(() => {
+                                        snippet.textContent = "📄 Text document";
+                                    });
+                            }
+                            // 📎 Icons for other types
                             else {
                                 const fileIcon = document.createElement('div');
-                                fileIcon.textContent = "📎";
-                                fileIcon.style.fontSize = "32px";
-                                fileIcon.style.marginBottom = "8px";
+                                let icon = "📎";
+                                if (ext === "pdf") icon = "📘";
+                                else if (["mp4", "webm", "mov"].includes(ext)) icon = "🎬";
+                                else if (["mp3", "wav", "ogg", "m4a"].includes(ext)) icon = "🎵";
+                                else if (["zip", "rar", "tar", "gz", "7z"].includes(ext)) icon = "🗜️";
+
+                                fileIcon.textContent = icon;
+                                fileIcon.style.fontSize = "36px";
+                                fileIcon.style.margin = "12px 0 8px";
                                 card.appendChild(fileIcon);
                             }
 
                             // Preview button
                             const previewBtn = document.createElement('button');
+                            previewBtn.type = 'button';
                             previewBtn.textContent = '👁️ Preview';
                             previewBtn.className = 'button';
                             previewBtn.style.marginTop = "8px";
                             previewBtn.style.marginRight = "4px";
                             previewBtn.style.fontSize = "0.9em";
                             previewBtn.onclick = () => {
-                                // Clear the content view and show preview
-                                contentView.innerHTML = `<h1>File Preview</h1><p><strong>${f}</strong></p>`;
-                                
-                                if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                                    const img = document.createElement('img');
-                                    img.src = fileUrl;
-                                    img.style.maxWidth = "100%";
-                                    img.style.borderRadius = "10px";
-                                    img.style.marginBottom = "20px";
-                                    contentView.appendChild(img);
-                                } else if (ext === "pdf") {
-                                    const embed = document.createElement('embed');
-                                    embed.src = fileUrl;
-                                    embed.type = "application/pdf";
-                                    embed.width = "100%";
-                                    embed.height = "500px";
-                                    contentView.appendChild(embed);
-                                } else if (["txt", "md"].includes(ext)) {
-                                    fetch(fileUrl).then(res => res.text()).then(text => {
-                                        const pre = document.createElement('pre');
-                                        pre.textContent = text;
-                                        pre.style.background = "#f8f8f8";
-                                        pre.style.padding = "10px";
-                                        pre.style.borderRadius = "8px";
-                                        contentView.appendChild(pre);
-                                    });
-                                } else {
-                                    const info = document.createElement('p');
-                                    info.textContent = "Preview not available for this file type.";
-                                    contentView.appendChild(info);
-                                }
-
-                                // Add download button
-                                const dlBtn = document.createElement('a');
-                                dlBtn.href = fileUrl;
-                                dlBtn.textContent = 'Download File';
-                                dlBtn.setAttribute('download', f);
-                                dlBtn.classList.add('button');
-                                dlBtn.style.marginTop = "15px";
-                                contentView.appendChild(dlBtn);
-
-                                // Add back button to return to grid view
-                                const backToGridBtn = document.createElement('button');
-                                backToGridBtn.textContent = 'Back to Files';
-                                backToGridBtn.className = 'button button-secondary';
-                                backToGridBtn.style.marginTop = '20px';
-                                backToGridBtn.style.marginLeft = '10px';
-                                backToGridBtn.onclick = () => {
+                                renderFilePreview(f, fileUrl, () => {
                                     contentView.innerHTML = `<h1>📁 Files for Code: ${code}</h1>`;
                                     contentView.appendChild(grid);
                                     contentView.appendChild(backBtn);
-                                };
-                                contentView.appendChild(backToGridBtn);
+                                });
                             };
-                            
+
                             // Download button
                             const downloadBtn = document.createElement('a');
-                            downloadBtn.href = fileUrl;
+                            downloadBtn.href = `${fileUrl}?download=true`;
                             downloadBtn.textContent = '⬇️ Download';
                             downloadBtn.setAttribute('download', f);
                             downloadBtn.className = 'button button-secondary';
                             downloadBtn.style.marginTop = "8px";
                             downloadBtn.style.fontSize = "0.9em";
-                            
+
                             // Filename display
                             const fileName = document.createElement('div');
                             fileName.textContent = f;
@@ -444,7 +1234,7 @@
                             fileName.style.overflow = "hidden";
                             fileName.style.textOverflow = "ellipsis";
                             fileName.style.whiteSpace = "nowrap";
-                            
+
                             card.appendChild(fileName);
                             card.appendChild(previewBtn);
                             card.appendChild(downloadBtn);
@@ -452,20 +1242,14 @@
                         }
 
                         contentView.appendChild(grid);
-
-                        const backBtn = document.createElement('button');
-                        backBtn.textContent = 'Share or Get Another';
-                        backBtn.className = 'button button-secondary';
-                        backBtn.style.marginTop = '20px';
-                        backBtn.onclick = showInitialView;
                         contentView.appendChild(backBtn);
-
                         return;
                     }
 
                     // 🧩 TEXT SNIPPET
                     if (data.type === 'text') {
                         const copyBtn = document.createElement('button');
+                        copyBtn.type = 'button';
                         copyBtn.textContent = 'Copy Text';
                         copyBtn.className = 'button copy-button';
                         copyBtn.addEventListener('click', () => {
@@ -478,60 +1262,21 @@
                         const pre = document.createElement('pre');
                         pre.textContent = data.content;
                         contentView.appendChild(pre);
+
+                        const backBtn = document.createElement('button');
+                        backBtn.type = 'button';
+                        backBtn.textContent = 'Share or Get Another';
+                        backBtn.className = 'button button-secondary';
+                        backBtn.style.marginTop = '20px';
+                        backBtn.onclick = showInitialView;
+                        contentView.appendChild(backBtn);
                     }
 
                     // 🧩 SINGLE FILE
                     else if (data.type === 'file') {
                         const fileUrl = `${API_BASE_URL}/get/${data.filename}`;
-                        const ext = data.filename.split('.').pop().toLowerCase();
-
-                        contentView.innerHTML = `<h1>File Preview</h1><p><strong>${data.filename}</strong></p>`;
-
-                        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                            const img = document.createElement('img');
-                            img.src = fileUrl;
-                            img.style.maxWidth = "100%";
-                            img.style.borderRadius = "10px";
-                            img.style.marginBottom = "20px";
-                            contentView.appendChild(img);
-                        } else if (ext === "pdf") {
-                            const embed = document.createElement('embed');
-                            embed.src = fileUrl;
-                            embed.type = "application/pdf";
-                            embed.width = "100%";
-                            embed.height = "500px";
-                            contentView.appendChild(embed);
-                        } else if (["txt", "md"].includes(ext)) {
-                            const res = await fetch(fileUrl);
-                            const text = await res.text();
-                            const pre = document.createElement('pre');
-                            pre.textContent = text;
-                            pre.style.background = "#f8f8f8";
-                            pre.style.padding = "10px";
-                            pre.style.borderRadius = "8px";
-                            contentView.appendChild(pre);
-                        } else {
-                            const info = document.createElement('p');
-                            info.textContent = "Preview not available for this file type.";
-                            contentView.appendChild(info);
-                        }
-
-                        const downloadBtn = document.createElement('a');
-                        downloadBtn.href = fileUrl;
-                        downloadBtn.textContent = 'Download File';
-                        downloadBtn.setAttribute('download', '');
-                        downloadBtn.classList.add('button');
-                        downloadBtn.style.marginTop = "15px";
-                        contentView.appendChild(downloadBtn);
+                        renderFilePreview(data.filename, fileUrl, showInitialView);
                     }
-
-                    // ✅ BACK BUTTON
-                    const backBtn = document.createElement('button');
-                    backBtn.textContent = 'Share or Get Another';
-                    backBtn.className = 'button button-secondary';
-                    backBtn.style.marginTop = '20px';
-                    backBtn.onclick = showInitialView;
-                    contentView.appendChild(backBtn);
 
                 } catch (error) {
                     showMessage(retrieveResult, error.message, true);
@@ -544,129 +1289,113 @@
                 const isModified = textContent.value !== originalText;
                 updateBtn.disabled = !isModified;
             }
-            if(textContent.value) {
+            if (textContent.value) {
                 fileInput.value = '';
                 dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
             }
         });
-        
+
         uploadForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const formData = new FormData(uploadForm);
+            event.preventDefault();
+            const formData = new FormData(uploadForm);
 
-        if (!formData.get('text_content') && !formData.get('file')?.name) {
-            showMessage(uploadResult, 'Please add text or a file to share.', true);
-            return;
-        }
-
-        handleAsyncOperation(async () => {
-            // ✅ Multiple files
-            if (fileInput.files.length > 1) {
-            showMessage(uploadResult, 'Uploading multiple files...');
-            const multiFormData = new FormData();
-            for (let i = 0; i < fileInput.files.length; i++) {
-                multiFormData.append('files', fileInput.files[i]);
+            if (!formData.get('text_content') && !formData.get('file')?.name) {
+                showMessage(uploadResult, 'Please add text or a file to share.', true);
+                return;
             }
 
-            try {
-                const res = await fetch(`${API_BASE_URL}/upload_multiple`, {
-                method: 'POST',
-                body: multiFormData,
-                });
+            handleAsyncOperation(async () => {
+                // ✅ Multiple files
+                if (fileInput.files.length > 1) {
+                    showMessage(uploadResult, 'Uploading multiple files...');
+                    const multiFormData = new FormData();
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        multiFormData.append('files', fileInput.files[i]);
+                    }
 
-                if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`Multiple file upload failed: ${errorText}`);
+                    try {
+                        const res = await uploadWithProgress(`${API_BASE_URL}/upload_multiple`, multiFormData);
+
+                        const data = await res.json();
+                        hideLoader();
+
+                        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
+                        const fileList = `<ul style="margin: 8px 0; padding-left: 20px; max-height: 120px; overflow-y: auto;">` +
+                            data.files.map(f => `<li>${f}</li>`).join('') + `</ul>`;
+
+                        renderUploadSuccess(
+                            data.code,
+                            `✅ Uploaded <strong>${data.files.length}</strong> files successfully!`,
+                            fileList,
+                            viewUrl
+                        );
+
+                        uploadForm.reset();
+                        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+                    } catch (error) {
+                        console.error(error);
+                        showMessage(uploadResult, error.message, true);
+                    }
+                    return;
                 }
 
-                const data = await res.json();
-                hideLoader();
+                // ✅ Single file upload
+                if (fileInput.files.length === 1) {
+                    showMessage(uploadResult, 'Uploading file...');
+                    try {
+                        const res = await uploadWithProgress(`${API_BASE_URL}/upload`, formData);
 
-                const viewUrl = `${API_BASE_URL}/view/${data.code}`;
-                const fileList = data.files.map(f => `<li>${f}</li>`).join('');
+                        const data = await res.json();
+                        hideLoader();
 
-                const successMessage = `
-                <p>✅ Uploaded <strong>${data.files.length}</strong> files successfully!</p>
-                <p>Your share code:</p>
-                <h2 style="letter-spacing: 2px;">${data.code}</h2>
-                <ul>${fileList}</ul>
-                <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
-                `;
-                showMessage(uploadResult, successMessage);
+                        const fileName = formData.get('file').name;
+                        const viewUrl = `${API_BASE_URL}/view/${data.code}`;
 
-                uploadForm.reset();
-                dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
-            } catch (error) {
-                console.error(error);
-                showMessage(uploadResult, error.message, true);
-            }
-            return;
-            }
+                        renderUploadSuccess(
+                            data.code,
+                            `✅ File '<strong>${fileName}</strong>' uploaded successfully!`,
+                            '',
+                            viewUrl
+                        );
 
-            // ✅ Single file upload
-            if (fileInput.files.length === 1) {
-            showMessage(uploadResult, 'Uploading file...');
-            try {
-                const res = await fetch(`${API_BASE_URL}/upload`, {
-                method: 'POST',
-                body: formData
-                });
-                if (!res.ok) throw new Error('File upload failed!');
+                        uploadForm.reset();
+                        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+                    } catch (error) {
+                        showMessage(uploadResult, error.message, true);
+                    }
+                    return;
+                }
 
-                const data = await res.json();
-                hideLoader();
+                // ✅ Text-only upload
+                showMessage(uploadResult, 'Generating code...');
+                try {
+                    const res = await uploadWithProgress(`${API_BASE_URL}/upload`, formData);
 
-                const fileName = formData.get('file').name;
-                const viewUrl = `${API_BASE_URL}/view/${data.code}`;
-                const successMessage = `
-                <p>✅ File '<strong>${fileName}</strong>' uploaded successfully!</p>
-                <p>Your share code:</p>
-                <h2 style="letter-spacing: 2px;">${data.code}</h2>
-                <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
-                `;
-                showMessage(uploadResult, successMessage);
+                    const data = await res.json();
+                    hideLoader();
 
-                uploadForm.reset();
-                dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
-            } catch (error) {
-                showMessage(uploadResult, error.message, true);
-            }
-            return;
-            }
+                    currentCode = data.code;
+                    originalText = textContent.value;
+                    generateBtn.classList.add('hidden');
+                    updateBtn.classList.remove('hidden');
+                    updateBtn.disabled = true;
+                    dropZone.classList.add('hidden');
 
-            // ✅ Text-only upload
-            showMessage(uploadResult, 'Generating code...');
-            try {
-            const res = await fetch(`${API_BASE_URL}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            if (!res.ok) throw new Error('Text upload failed!');
+                    const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
 
-            const data = await res.json();
-            hideLoader();
-
-            currentCode = data.code;
-            originalText = textContent.value;
-            generateBtn.classList.add('hidden');
-            updateBtn.classList.remove('hidden');
-            updateBtn.disabled = true;
-            dropZone.classList.add('hidden');
-
-            const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
-            const successMessage = `
-                <p>✅ Success! Your share code is:</p>
-                <h2 style="letter-spacing: 2px;">${currentCode}</h2>
-                <a href="${viewUrl}" target="_blank">🔗 Open Sharable Link</a>
-            `;
-            showMessage(uploadResult, successMessage);
-            } catch (error) {
-            showMessage(uploadResult, error.message, true);
-            }
-        });
+                    renderUploadSuccess(
+                        currentCode,
+                        `✅ Success! Your snippet code is generated.`,
+                        '',
+                        viewUrl
+                    );
+                } catch (error) {
+                    showMessage(uploadResult, error.message, true);
+                }
+            }, true);
         });
 
-        
+
         updateBtn.addEventListener('click', async () => {
             if (!currentCode || updateBtn.disabled) return;
             const newText = textContent.value;
@@ -679,10 +1408,10 @@
                     body: JSON.stringify({ content: newText })
                 });
                 if (!response.ok) throw new Error('Update failed!');
-                
+
                 originalText = newText;
                 updateBtn.disabled = true;
-                
+
                 // ✅ FIXED: Added API_BASE_URL to the view link
                 const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
                 const successMessage = `<p>Snippet updated successfully! Your code is:</p><h2 style="letter-spacing: 2px;">${currentCode}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
@@ -692,7 +1421,11 @@
                 showMessage(uploadResult, error.message, true);
             }
         });
+
+        // Restore any recent share code if the page was refreshed
+        restoreSavedUpload();
     </script>
     <script src="contact.js"></script>
 </body>
+
 </html>

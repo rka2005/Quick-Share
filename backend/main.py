@@ -3,6 +3,7 @@ import string
 import random
 import html
 import time
+import mimetypes
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, FileResponse
@@ -231,24 +232,25 @@ async def view_shared_content(code: str):
 
         # --- Preview different file types ---
         def is_text(f): return any(f.endswith(ext) for ext in [".txt", ".py", ".js", ".html", ".css", ".json", ".md"])
-        def is_image(f): return any(f.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg"])
+        def is_image(f): return any(f.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".webp"])
         def is_pdf(f): return f.endswith(".pdf")
 
         previews = ""
         for f in files:
             file_url = f"/get_multiple/{code}/{f}"
+            download_url = f"/get_multiple/{code}/{f}?download=true"
             safe_name = html.escape(f)
 
             if is_text(f):
                 with open(os.path.join(folder_path, f), "r", encoding="utf-8", errors="ignore") as file_data:
                     content = html.escape(file_data.read()[:5000])  # limit preview size
-                previews += f"<h3>📄 {safe_name}</h3><pre style='background:#f8f9fa;padding:10px;border-radius:8px;'>{content}</pre><hr>"
+                previews += f"<h3>📄 {safe_name}</h3><pre style='background:#f8f9fa;padding:10px;border-radius:8px;'>{content}</pre><a href='{download_url}' download='{safe_name}'>Download</a><hr>"
             elif is_image(f):
-                previews += f"<h3>🖼️ {safe_name}</h3><img src='{file_url}' alt='{safe_name}' style='max-width:100%;border-radius:10px;'/><hr>"
+                previews += f"<h3>🖼️ {safe_name}</h3><img src='{file_url}' alt='{safe_name}' style='max-width:100%;border-radius:10px;'/><br><br><a href='{download_url}' download='{safe_name}'>Download</a><hr>"
             elif is_pdf(f):
-                previews += f"<h3>📘 {safe_name}</h3><embed src='{file_url}' type='application/pdf' width='100%' height='500px'/><hr>"
+                previews += f"<h3>📘 {safe_name}</h3><iframe src='{file_url}' width='100%' height='550px' style='border:none;border-radius:8px;'></iframe><br><br><a href='{download_url}' download='{safe_name}'>Download</a><hr>"
             else:
-                previews += f"<h3>📦 {safe_name}</h3><a href='{file_url}' target='_blank'>Download</a><hr>"
+                previews += f"<h3>📦 {safe_name}</h3><a href='{download_url}' download='{safe_name}'>Download</a><hr>"
 
         html_content = f"""
         <html>
@@ -277,26 +279,50 @@ async def view_shared_content(code: str):
     if found_filename.endswith(".txt"):
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = html.escape(f.read())
-        return HTMLResponse(f"<pre>{content}</pre>")
+        return HTMLResponse(f"<pre>{content}</pre><br><a href='/get/{found_filename}?download=true'>Download</a>")
 
-    # Other files: download link
-    return HTMLResponse(f"<a href='/get/{found_filename}'>Download {found_filename}</a>")
+    # Other files: preview and download link
+    file_url = f"/get/{found_filename}"
+    download_url = f"/get/{found_filename}?download=true"
+    ext = os.path.splitext(found_filename)[1].lower()
+    if ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".webp"]:
+        return HTMLResponse(f"<h3>🖼️ {found_filename}</h3><img src='{file_url}' style='max-width:100%;border-radius:10px;'><br><br><a href='{download_url}'>Download {found_filename}</a>")
+    elif ext == ".pdf":
+        return HTMLResponse(f"<h3>📘 {found_filename}</h3><iframe src='{file_url}' width='100%' height='600px' style='border:none;'></iframe><br><br><a href='{download_url}'>Download {found_filename}</a>")
+
+    return HTMLResponse(f"<a href='{download_url}'>Download {found_filename}</a>")
 
 
 @app.get("/get/{file_id}")
-async def get_shared_content(file_id: str):
-    """Serve the shared file for downloading."""
+async def get_shared_content(file_id: str, download: bool = False):
+    """Serve the shared file for downloading or inline preview."""
     file_path = os.path.join(UPLOAD_DIRECTORY, file_id)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Content not found.")
-    return FileResponse(path=file_path)
+
+    media_type, _ = mimetypes.guess_type(file_path)
+    disp_type = "attachment" if download else "inline"
+    return FileResponse(
+        path=file_path,
+        filename=file_id,
+        media_type=media_type,
+        content_disposition_type=disp_type
+    )
 
 @app.get("/get_multiple/{code}/{filename}")
-async def get_file_from_folder(code: str, filename: str):
+async def get_file_from_folder(code: str, filename: str, download: bool = False):
+    """Serve multiple shared files for downloading or inline preview."""
     folder_path = os.path.join(UPLOAD_DIRECTORY, code)
     file_path = os.path.join(folder_path, filename)
 
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found.")
 
-    return FileResponse(path=file_path, filename=filename)
+    media_type, _ = mimetypes.guess_type(file_path)
+    disp_type = "attachment" if download else "inline"
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type=media_type,
+        content_disposition_type=disp_type
+    )

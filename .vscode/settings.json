@@ -1,0 +1,20 @@
+{
+  "fiveserver.watch": ["frontend"],
+  "fiveserver.ignore": [
+    "backend/**",
+    "**/uploads/**",
+    ".git/**",
+    "**/*.txt",
+    "**/*.pdf",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.webp"
+  ],
+  "liveServer.settings.ignoreFiles": [
+    ".vscode/**",
+    "backend/**",
+    "**/uploads/**",
+    "**/.git/**"
+  ]
+}
