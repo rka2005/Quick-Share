@@ -55,77 +55,116 @@ quick share/
 
 ## System Architecture
 
-```mermaid
-graph TD
-    subgraph Client ["Client Layer (Browser)"]
-        UI["Quick Share Web App<br/>(HTML5 / CSS3 / Vanilla JS)"]
-        HUD["Flight Deck HUD<br/>(SVG Telemetry & Vessel Animations)"]
-        Storage["SessionStorage<br/>(Code Persistence & Recovery)"]
-        PreviewEngine["Inline Preview Engine<br/>(PDF / Image / Video / Audio / Code)"]
-    end
-
-    subgraph Edge ["Routing & Edge Layer"]
-        VercelRewrite["Vercel Proxy / Rewrites<br/>(/backend/*)"]
-        ContactFn["Vercel Serverless Function<br/>(/api/contact via Nodemailer)"]
-        CFTunnel["Cloudflare Tunnel<br/>(Dev / Remote Gateway)"]
-    end
-
-    subgraph Backend ["Backend API Layer (FastAPI & Uvicorn)"]
-        Router["FastAPI Application"]
-        UploadHandler["Upload Service<br/>(Single File & Batch Multi-File)"]
-        CodeGenerator["Code Generator<br/>(6-Char Unique Uppercase Code)"]
-        RetrieveHandler["Content Resolver & Metadata Finder<br/>(/find_file/{code})"]
-        StreamHandler["FileResponse Streamer<br/>(?download=true / inline)"]
-        Scheduler["APScheduler Background Worker<br/>(12-Hour TTL Auto-Purge)"]
-    end
-
-    subgraph StorageLayer ["Ephemeral Storage Layer (Disk)"]
-        UploadDir[("uploads/ Directory")]
-        BatchFolders["Batch Folders<br/>(uploads/CODE/file1, file2...)"]
-        SingleFiles["Single Files<br/>(uploads/CODE.ext)"]
-        Snippets["Text Snippets<br/>(uploads/CODE.txt)"]
-    end
-
-    %% Client Interactions
-    UI -->|1. Upload Text or Files| VercelRewrite
-    UI -->|Direct Local / Tunnel Calls| CFTunnel
-    UI -->|Submit Contact Form| ContactFn
-    
-    %% Routing to Backend
-    VercelRewrite --> Router
-    CFTunnel --> Router
-
-    %% Backend Services
-    Router --> UploadHandler
-    Router --> RetrieveHandler
-    Router --> StreamHandler
-
-    UploadHandler --> CodeGenerator
-    UploadHandler -->|Persist Content| StorageLayer
-    
-    RetrieveHandler -->|Check Path & Read Metadata| StorageLayer
-    RetrieveHandler -->|Return Content JSON| UI
-    
-    %% File Streaming
-    UI -->|2. Preview File| StreamHandler
-    StreamHandler -->|Content-Disposition: inline| PreviewEngine
-    
-    UI -->|3. Download File (?download=true)| StreamHandler
-    StreamHandler -->|Content-Disposition: attachment| UI
-
-    %% Cleanup
-    Scheduler -.->|Hourly Scan & Purge Expired| StorageLayer
-
-    classDef client fill:#e0e7ff,stroke:#4338ca,stroke-width:1px;
-    classDef edge fill:#fef3c7,stroke:#b45309,stroke-width:1px;
-    classDef backend fill:#dcfce7,stroke:#15803d,stroke-width:1px;
-    classDef storage fill:#f3e8ff,stroke:#7e22ce,stroke-width:1px;
-
-    class UI,HUD,Storage,PreviewEngine client;
-    class VercelRewrite,ContactFn,CFTunnel edge;
-    class Router,UploadHandler,CodeGenerator,RetrieveHandler,StreamHandler,Scheduler backend;
-    class StorageLayer,UploadDir,BatchFolders,SingleFiles,Snippets storage;
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             CLIENT LAYER (BROWSER)                          │
+│                                                                             │
+│   ┌──────────────────────────┐    ┌─────────────────────────────────────┐   │
+│   │   Quick Share Web App    │    │        Flight Deck HUD & Orbit      │   │
+│   │ (HTML5 / Vanilla JS/CSS) │    │      (Realtime Flight Telemetry)    │   │
+│   └─────────────┬────────────┘    └──────────────────┬──────────────────┘   │
+│                 │                                    │                      │
+│   ┌─────────────▼────────────┐    ┌──────────────────▼──────────────────┐   │
+│   │   SessionStorage Cache   │    │      In-Browser Preview Engine      │   │
+│   │   (Code Auto-Recovery)   │    │  (PDF Iframe / Media / Code Viewer) │   │
+│   └──────────────────────────┘    └──────────────────▲──────────────────┘   │
+└───────────────────────┬──────────────────────────────┼──────────────────────┘
+                        │ HTTP / REST Requests         │ Inline Previews
+                        ▼                              │ & Downloads
+┌──────────────────────────────────────────────────────┴──────────────────────┐
+│                            EDGE & ROUTING LAYER                             │
+│                                                                             │
+│   ┌─────────────────────────────┐         ┌─────────────────────────────┐   │
+│   │    Vercel Rewrites Proxy    │         │  Vercel Serverless Function │   │
+│   │      (/backend/* Route)     │         │   (/api/contact Nodemailer) │   │
+│   └──────────────┬──────────────┘         └─────────────────────────────┘   │
+│                  │                                                          │
+│   ┌──────────────▼──────────────┐                                           │
+│   │      Cloudflare Tunnel      │                                           │
+│   │    (Dev / Remote Gateway)   │                                           │
+│   └──────────────┬──────────────┘                                           │
+└──────────────────┼──────────────────────────────────────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         BACKEND LAYER (FASTAPI & UVICORN)                   │
+│                                                                             │
+│   ┌─────────────────────────────┐         ┌─────────────────────────────┐   │
+│   │     FastAPI Router Core     │◄───────►│  APScheduler Cleaner (12h)  │   │
+│   │  (CORS, Validation, Limits) │         │  (Background Auto-Purge)    │   │
+│   └──────────────┬──────────────┘         └─────────────────────────────┘   │
+│                  │                                                          │
+│   ┌──────────────┴──────────────┬───────────────────────────┐               │
+│   │                             │                           │               │
+│   ▼                             ▼                           ▼               │
+│ ┌─────────────────────────┐   ┌───────────────────────┐   ┌───────────────┐ │
+│ │  Upload & Code Service  │   │ Content Resolver API  │   │ File Streamer │ │
+│ │ (6-Char Random Code Gen)│   │  (/find_file/:code)   │   │(Inline/Attach)│ │
+│ └────────────┬────────────┘   └───────────┬───────────┘   └───────┬───────┘ │
+└──────────────┼────────────────────────────┼───────────────────────┼─────────┘
+               │ Write Uploads              │ Read Metadata         │ Read File
+               ▼                            ▼                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        EPHEMERAL DISK STORAGE (UPLOADS/)                    │
+│                                                                             │
+│   • uploads/CODE.txt           --> Raw text snippets                        │
+│   • uploads/CODE.ext           --> Single file uploads                      │
+│   • uploads/CODE/filename.ext  --> Grouped multi-file upload batches        │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+<details>
+<summary><b>Click to expand Mermaid Flowchart</b></summary>
+
+```mermaid
+flowchart TD
+    subgraph Client [Client - Browser Application]
+        UI["Quick Share Frontend\nHTML5 / CSS3 / Vanilla JS"]
+        HUD["Flight Deck HUD\nTelemetry & Vessel Animation"]
+        Storage["SessionStorage\nShare Code Recovery"]
+        Viewer["Media Preview Engine\nPDF / Image / Video / Audio / Code"]
+    end
+
+    subgraph Edge [Edge & Routing Layer]
+        VercelRewrite["Vercel API Rewrite\n/backend/*"]
+        ContactAPI["Vercel Serverless Function\n/api/contact"]
+        Tunnel["Cloudflare Tunnel\nDevelopment Gateway"]
+    end
+
+    subgraph Backend [FastAPI Backend Service]
+        App["FastAPI Application Core"]
+        UploadSvc["Upload Handler\nSingle & Batch Files"]
+        CodeGen["Code Generator\n6-Character Unique ID"]
+        FindSvc["Content Resolver\n/find_file/:code"]
+        StreamSvc["File Streamer\nInline Preview vs Attachment Download"]
+        Cleaner["APScheduler Worker\n12-Hour Expiration Cleanup"]
+    end
+
+    subgraph Disk [Ephemeral Storage]
+        Store[("Uploads Directory\nbackend/uploads")]
+    end
+
+    UI --> VercelRewrite
+    UI --> Tunnel
+    UI --> ContactAPI
+
+    VercelRewrite --> App
+    Tunnel --> App
+
+    App --> UploadSvc
+    App --> FindSvc
+    App --> StreamSvc
+
+    UploadSvc --> CodeGen
+    UploadSvc --> Store
+    FindSvc --> Store
+    StreamSvc --> Store
+    Cleaner --> Store
+
+    StreamSvc -.->|Inline Stream| Viewer
+    StreamSvc -.->|Download Attachment| UI
+```
+
+</details>
 
 ### Architectural Workflow
 
@@ -133,7 +172,7 @@ graph TD
    - The user selects one or more files or pastes text.
    - The client tracks real-time progress via `XMLHttpRequest.upload` and updates the interactive flight deck HUD.
    - The backend generates a cryptographically random, uppercase 6-character identifier.
-   - Files are stored as either `uploads/{CODE}.{ext}` (single uploads) or inside a isolated batch folder `uploads/{CODE}/{filename}` (multiple uploads).
+   - Files are stored as either `uploads/{CODE}.{ext}` (single uploads) or inside an isolated batch folder `uploads/{CODE}/{filename}` (multiple uploads).
    - Once successfully saved, the code is returned, displayed with a 1-click **Copy** button, and cached in `sessionStorage` for persistence across refreshes.
 
 2. **Retrieval, Preview & Download Pipeline**:
