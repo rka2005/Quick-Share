@@ -55,66 +55,6 @@ quick share/
 
 ## System Architecture
 
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             CLIENT LAYER (BROWSER)                          │
-│                                                                             │
-│   ┌──────────────────────────┐    ┌─────────────────────────────────────┐   │
-│   │   Quick Share Web App    │    │        Flight Deck HUD & Orbit      │   │
-│   │ (HTML5 / Vanilla JS/CSS) │    │      (Realtime Flight Telemetry)    │   │
-│   └─────────────┬────────────┘    └──────────────────┬──────────────────┘   │
-│                 │                                    │                      │
-│   ┌─────────────▼────────────┐    ┌──────────────────▼──────────────────┐   │
-│   │   SessionStorage Cache   │    │      In-Browser Preview Engine      │   │
-│   │   (Code Auto-Recovery)   │    │  (PDF Iframe / Media / Code Viewer) │   │
-│   └──────────────────────────┘    └──────────────────▲──────────────────┘   │
-└───────────────────────┬──────────────────────────────┼──────────────────────┘
-                        │ HTTP / REST Requests         │ Inline Previews
-                        ▼                              │ & Downloads
-┌──────────────────────────────────────────────────────┴──────────────────────┐
-│                            EDGE & ROUTING LAYER                             │
-│                                                                             │
-│   ┌─────────────────────────────┐         ┌─────────────────────────────┐   │
-│   │    Vercel Rewrites Proxy    │         │  Vercel Serverless Function │   │
-│   │      (/backend/* Route)     │         │   (/api/contact Nodemailer) │   │
-│   └──────────────┬──────────────┘         └─────────────────────────────┘   │
-│                  │                                                          │
-│   ┌──────────────▼──────────────┐                                           │
-│   │      Cloudflare Tunnel      │                                           │
-│   │    (Dev / Remote Gateway)   │                                           │
-│   └──────────────┬──────────────┘                                           │
-└──────────────────┼──────────────────────────────────────────────────────────┘
-                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         BACKEND LAYER (FASTAPI & UVICORN)                   │
-│                                                                             │
-│   ┌─────────────────────────────┐         ┌─────────────────────────────┐   │
-│   │     FastAPI Router Core     │◄───────►│  APScheduler Cleaner (12h)  │   │
-│   │  (CORS, Validation, Limits) │         │  (Background Auto-Purge)    │   │
-│   └──────────────┬──────────────┘         └─────────────────────────────┘   │
-│                  │                                                          │
-│   ┌──────────────┴──────────────┬───────────────────────────┐               │
-│   │                             │                           │               │
-│   ▼                             ▼                           ▼               │
-│ ┌─────────────────────────┐   ┌───────────────────────┐   ┌───────────────┐ │
-│ │  Upload & Code Service  │   │ Content Resolver API  │   │ File Streamer │ │
-│ │ (6-Char Random Code Gen)│   │  (/find_file/:code)   │   │(Inline/Attach)│ │
-│ └────────────┬────────────┘   └───────────┬───────────┘   └───────┬───────┘ │
-└──────────────┼────────────────────────────┼───────────────────────┼─────────┘
-               │ Write Uploads              │ Read Metadata         │ Read File
-               ▼                            ▼                       ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        EPHEMERAL DISK STORAGE (UPLOADS/)                    │
-│                                                                             │
-│   • uploads/CODE.txt           --> Raw text snippets                        │
-│   • uploads/CODE.ext           --> Single file uploads                      │
-│   • uploads/CODE/filename.ext  --> Grouped multi-file upload batches        │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-<details>
-<summary><b>Click to expand Mermaid Flowchart</b></summary>
-
 ```mermaid
 flowchart TD
     subgraph Client [Client - Browser Application]
