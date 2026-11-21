@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="styles.css">
 
     <!-- ============================================================
-         NEW FEATURE STYLES (drag animation, cancel, file picker, history)
+         NEW FEATURE STYLES (drag animation, cancel, file picker)
          Self-contained so styles.css does not need to change.
          ============================================================ -->
     <style>
@@ -231,29 +231,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            width: 100%;
             margin-top: 14px;
-            padding: 13px 18px;
-            font-size: .98rem;
-            font-weight: 700;
-            color: #fff;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, .3);
-            border-radius: 14px;
-            background: linear-gradient(135deg, #06b6d4 0%, #7c3aed 55%, #ec4899 100%);
-            background-size: 180% 180%;
-            box-shadow: 0 8px 22px rgba(124, 58, 237, .35);
-            transition: transform .2s ease, box-shadow .2s ease, background-position .6s ease;
-        }
-
-        .fp-open-btn:hover {
-            transform: translateY(-2px);
-            background-position: 100% 50%;
-            box-shadow: 0 12px 28px rgba(124, 58, 237, .5);
-        }
-
-        .fp-open-btn:active {
-            transform: translateY(0) scale(.99);
         }
 
         .fp-badge {
@@ -479,110 +457,13 @@
             }
         }
 
-        /* ---------- 4. History ---------- */
-        .history-panel {
-            margin-top: 22px;
-            padding: 14px 16px;
-            text-align: left;
-            border-radius: 14px;
-            border: 1px solid var(--glass-border, rgba(255, 255, 255, .25));
-            background: var(--glass-bg, rgba(255, 255, 255, .06));
-            animation: chipPop .45s ease backwards;
-        }
-
-        .history-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .history-head h3 {
-            margin: 0;
-            font-size: 1rem;
-        }
-
-        .history-head small {
-            font-weight: 500;
-            opacity: .65;
-            margin-left: 6px;
-        }
-
-        .history-clear {
-            width: auto;
-            margin: 0;
-            padding: 4px 12px;
-            font-size: .75rem;
-        }
-
-        .history-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            max-height: 260px;
-            overflow-y: auto;
-        }
-
-        .history-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 4px;
-            border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, .15));
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-icon {
-            font-size: 1.3rem;
-        }
-
-        .history-main {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .history-code {
-            font: 700 1rem 'Space Mono', monospace;
-            letter-spacing: 2px;
-            color: var(--accent-color, #7090cc);
-        }
-
-        .history-names {
-            font-size: .8rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .history-time {
-            font-size: .7rem;
-            opacity: .6;
-        }
-
-        .history-btns {
-            display: flex;
-            gap: 6px;
-        }
-
-        .history-btns button {
-            width: auto;
-            margin: 0;
-            padding: 5px 10px;
-            font-size: .75rem;
-        }
-
         @media (prefers-reduced-motion: reduce) {
 
             .drop-zone,
             .drop-zone *,
             .dz-chip,
             .fp-item,
-            .fp-badge,
-            .history-panel {
+            .fp-badge {
                 animation: none !important;
                 transition: none !important;
             }
@@ -998,7 +879,7 @@
                     </div>
 
                     <!-- NEW: opens multi-file preview popup -->
-                    <button type="button" id="openFilePickerBtn" class="fp-open-btn">
+                    <button type="button" id="openFilePickerBtn" class="button fp-open-btn">
                         <span aria-hidden="true">🗂️</span>
                         <span id="openFilePickerText">Select &amp; Preview Files</span>
                         <span id="fpBadge" class="fp-badge hidden">0</span>
@@ -1009,16 +890,6 @@
                         Text</button>
                 </form>
                 <div id="uploadResult" class="hidden"></div>
-
-                <!-- NEW: last 12 hours history -->
-                <div id="historyPanel" class="history-panel hidden">
-                    <div class="history-head">
-                        <h3>Recent shares <small>last 12 hours</small></h3>
-                        <button type="button" id="clearHistoryBtn"
-                            class="button button-secondary history-clear">Clear</button>
-                    </div>
-                    <ul id="historyList" class="history-list"></ul>
-                </div>
             </div>
         </div>
     </div>
@@ -1558,7 +1429,6 @@
             updateBtn.classList.add('hidden');
             dropZone.classList.remove('hidden');
             openFilePickerBtn.classList.remove('hidden');
-            renderHistory();
         }
 
         function showContentView() {
@@ -1907,8 +1777,10 @@
             fpSummary.textContent = draftFiles.length
                 ? `${draftFiles.length} file${draftFiles.length > 1 ? 's' : ''} · ${formatSize(total)}`
                 : 'No files selected';
-            fpConfirmBtn.disabled = draftFiles.length === 0;
-            fpConfirmBtn.textContent = draftFiles.length ? `Use ${draftFiles.length} file${draftFiles.length > 1 ? 's' : ''}` : 'Use files';
+            fpConfirmBtn.disabled = false;
+            fpConfirmBtn.textContent = draftFiles.length
+                ? `Use ${draftFiles.length} file${draftFiles.length > 1 ? 's' : ''}`
+                : 'Clear selection';
         }
 
         function renderPreviewPane() {
@@ -1992,107 +1864,6 @@
             commitFiles(picked);
             landAnimation();
         });
-
-        // =========================================================
-        // ✨ HISTORY (last 12 hours, stored in this browser) ✨
-        // =========================================================
-        const HISTORY_KEY = 'quickshare_history_v1';
-        const HISTORY_TTL = 12 * 60 * 60 * 1000;
-        const historyPanel = document.getElementById('historyPanel');
-        const historyList = document.getElementById('historyList');
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-
-        function loadHistory() {
-            try {
-                const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                const cutoff = Date.now() - HISTORY_TTL;
-                const fresh = Array.isArray(raw) ? raw.filter(h => h && h.code && h.time > cutoff) : [];
-                if (!Array.isArray(raw) || fresh.length !== raw.length) {
-                    localStorage.setItem(HISTORY_KEY, JSON.stringify(fresh));
-                }
-                return fresh;
-            } catch (e) {
-                return [];
-            }
-        }
-
-        function saveHistory(list) {
-            try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) { }
-        }
-
-        function addHistory(entry) {
-            const list = loadHistory().filter(h => h.code !== entry.code);
-            list.unshift({ ...entry, time: Date.now() });
-            saveHistory(list.slice(0, 30));
-            renderHistory();
-        }
-
-        function updateHistoryNames(code, names) {
-            const list = loadHistory();
-            const item = list.find(h => h.code === code);
-            if (item) {
-                item.names = names;
-                saveHistory(list);
-                renderHistory();
-            }
-        }
-
-        function timeAgo(ts) {
-            const mins = Math.floor((Date.now() - ts) / 60000);
-            if (mins < 1) return 'just now';
-            if (mins < 60) return `${mins} min ago`;
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return m ? `${h}h ${m}m ago` : `${h}h ago`;
-        }
-
-        function renderHistory() {
-            const list = loadHistory();
-            historyPanel.classList.toggle('hidden', list.length === 0);
-            historyList.innerHTML = list.map(h => {
-                const names = h.names || [];
-                const shown = names.slice(0, 2).map(escapeHtml).join(', ') + (names.length > 2 ? ` +${names.length - 2} more` : '');
-                const icon = h.kind === 'text' ? '📝' : h.kind === 'multiple' ? '📁' : fileIcon(getExt(names[0] || ''));
-                return `
-                    <li class="history-item">
-                        <span class="history-icon">${icon}</span>
-                        <div class="history-main">
-                            <div class="history-code">${escapeHtml(h.code)}</div>
-                            <div class="history-names" title="${escapeHtml(names.join(', '))}">${shown || 'Shared item'}</div>
-                            <div class="history-time">${timeAgo(h.time)}</div>
-                        </div>
-                        <div class="history-btns">
-                            <button type="button" class="button button-secondary" data-h-action="copy" data-code="${escapeHtml(h.code)}">Copy</button>
-                            <button type="button" class="button" data-h-action="get" data-code="${escapeHtml(h.code)}">Open</button>
-                        </div>
-                    </li>`;
-            }).join('');
-        }
-
-        historyList.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-h-action]');
-            if (!btn) return;
-            const code = btn.dataset.code;
-            if (btn.dataset.hAction === 'copy') {
-                navigator.clipboard.writeText(code).then(() => {
-                    btn.textContent = 'Copied!';
-                    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
-                });
-            } else {
-                codeInput.value = code;
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                if (retrieveForm.requestSubmit) retrieveForm.requestSubmit();
-                else retrieveForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-            }
-        });
-
-        clearHistoryBtn.addEventListener('click', () => {
-            saveHistory([]);
-            renderHistory();
-        });
-
-        // Keep "x min ago" fresh and drop expired entries
-        setInterval(renderHistory, 60000);
 
         // =========================================================
         // FILE PREVIEW (retrieve side)
@@ -2408,11 +2179,6 @@
             }
         });
 
-        const snippetLabel = (text) => {
-            const flat = text.replace(/\s+/g, ' ').trim();
-            return `Text snippet: "${flat.slice(0, 40)}${flat.length > 40 ? '…' : ''}"`;
-        };
-
         uploadForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(uploadForm);
@@ -2447,8 +2213,6 @@
                             fileList,
                             viewUrl
                         );
-                        addHistory({ code: data.code, kind: 'multiple', names: data.files });
-
                         uploadForm.reset();
                         clearStaged();
                     } catch (error) {
@@ -2475,8 +2239,6 @@
                             '',
                             viewUrl
                         );
-                        addHistory({ code: data.code, kind: 'file', names: [fileName] });
-
                         uploadForm.reset();
                         clearStaged();
                     } catch (error) {
@@ -2509,7 +2271,6 @@
                         '',
                         viewUrl
                     );
-                    addHistory({ code: currentCode, kind: 'text', names: [snippetLabel(originalText)] });
                 } catch (error) {
                     handleUploadError(error);
                 }
@@ -2532,8 +2293,6 @@
 
                 originalText = newText;
                 updateBtn.disabled = true;
-                updateHistoryNames(currentCode, [snippetLabel(newText)]);
-
                 const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
                 const successMessage = `<p>Snippet updated successfully! Your code is:</p><h2 style="letter-spacing: 2px;">${currentCode}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
                 showMessage(uploadResult, successMessage);
@@ -2543,8 +2302,7 @@
             }
         });
 
-        // Initial render of history + restore any recent share code if the page was refreshed
-        renderHistory();
+        // Restore any recent share code if the page was refreshed
         restoreSavedUpload();
     </script>
     <script src="contact.js"></script>
