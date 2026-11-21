@@ -14,6 +14,580 @@
         rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
+
+    <!-- ============================================================
+         NEW FEATURE STYLES (drag animation, cancel, file picker, history)
+         Self-contained so styles.css does not need to change.
+         ============================================================ -->
+    <style>
+        /* ---------- 1. Drag & drop animation ---------- */
+        .drop-zone {
+            position: relative;
+            overflow: hidden;
+            transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), border-color .25s ease, background .25s ease, box-shadow .25s ease;
+        }
+
+        .drop-zone .dz-icon {
+            display: block;
+            font-size: 2rem;
+            line-height: 1;
+            margin-bottom: 6px;
+            transition: transform .3s ease;
+            pointer-events: none;
+        }
+
+        .drop-zone:hover .dz-icon {
+            transform: translateY(-3px);
+        }
+
+        .drop-zone::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, transparent 30%, rgba(0, 245, 212, .18) 48%, rgba(124, 58, 237, .22) 52%, transparent 70%);
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .drop-zone::after {
+            content: "Release to drop your files";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: .3px;
+            color: #fff;
+            background: rgba(112, 144, 204, .82);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            transform: scale(1.06);
+            transition: opacity .2s ease, transform .25s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .drop-zone.dz-armed {
+            animation: dzArmed 1.4s ease-in-out infinite;
+        }
+
+        .drop-zone.drag-over {
+            transform: scale(1.025);
+            border-style: solid;
+            box-shadow: 0 0 0 4px rgba(112, 144, 204, .25), 0 12px 30px rgba(124, 58, 237, .28);
+        }
+
+        .drop-zone.drag-over::before {
+            opacity: 1;
+            animation: dzSweep 1.2s linear infinite;
+        }
+
+        .drop-zone.drag-over::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .drop-zone.drag-over .dz-icon {
+            animation: dzBounce .65s ease-in-out infinite;
+        }
+
+        .drop-zone.dz-landed {
+            animation: dzLand .55s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .dz-ripple {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 245, 212, .65), rgba(124, 58, 237, .35) 60%, transparent 70%);
+            animation: dzRipple .7s ease-out forwards;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .dz-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .dz-chip {
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: .78rem;
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, .25));
+            background: var(--glass-bg, rgba(255, 255, 255, .08));
+            animation: chipPop .45s cubic-bezier(.34, 1.56, .64, 1) backwards;
+        }
+
+        @keyframes dzBounce {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-9px) scale(1.15);
+            }
+        }
+
+        @keyframes dzSweep {
+            to {
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes dzArmed {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(112, 144, 204, .0);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(112, 144, 204, .22);
+            }
+        }
+
+        @keyframes dzLand {
+            0% {
+                transform: scale(1.04);
+            }
+
+            40% {
+                transform: scale(.97);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes dzRipple {
+            to {
+                transform: scale(22);
+                opacity: 0;
+            }
+        }
+
+        @keyframes chipPop {
+            from {
+                transform: scale(.4) translateY(8px);
+                opacity: 0;
+            }
+        }
+
+        /* ---------- 2. Cancel upload ---------- */
+        .cancel-upload-btn {
+            width: auto;
+            margin: 0;
+            padding: 6px 14px;
+            font-size: .8rem;
+            font-weight: 700;
+            border-radius: 999px;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, #ef4444, #be123c);
+            border: 1px solid rgba(255, 255, 255, .35);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, .35);
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+        }
+
+        .cancel-upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(239, 68, 68, .5);
+        }
+
+        .cancel-upload-btn:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        .flight-deck-footer {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .flight-deck-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* ---------- 3. File picker button + modal ---------- */
+        .fp-open-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 14px;
+            padding: 13px 18px;
+            font-size: .98rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, .3);
+            border-radius: 14px;
+            background: linear-gradient(135deg, #06b6d4 0%, #7c3aed 55%, #ec4899 100%);
+            background-size: 180% 180%;
+            box-shadow: 0 8px 22px rgba(124, 58, 237, .35);
+            transition: transform .2s ease, box-shadow .2s ease, background-position .6s ease;
+        }
+
+        .fp-open-btn:hover {
+            transform: translateY(-2px);
+            background-position: 100% 50%;
+            box-shadow: 0 12px 28px rgba(124, 58, 237, .5);
+        }
+
+        .fp-open-btn:active {
+            transform: translateY(0) scale(.99);
+        }
+
+        .fp-badge {
+            min-width: 24px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #fff;
+            color: #7c3aed;
+            font-size: .78rem;
+            text-align: center;
+            animation: chipPop .4s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .fp-card {
+            width: min(920px, 94vw);
+            max-width: 920px;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .fp-card h3 {
+            margin: 0 0 4px;
+        }
+
+        .fp-drop {
+            margin: 14px 0;
+            padding: 16px;
+            text-align: center;
+            border: 2px dashed var(--glass-border, rgba(255, 255, 255, .35));
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background .2s ease, transform .2s ease, border-color .2s ease;
+        }
+
+        .fp-drop.drag-over {
+            background: rgba(112, 144, 204, .22);
+            border-color: #7090cc;
+            transform: scale(1.01);
+        }
+
+        .fp-layout {
+            display: grid;
+            grid-template-columns: 1.05fr 1fr;
+            gap: 16px;
+        }
+
+        .fp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            max-height: 340px;
+            overflow-y: auto;
+            padding: 4px;
+            align-content: start;
+        }
+
+        .fp-item {
+            position: relative;
+            padding: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, .25));
+            background: var(--glass-bg, rgba(255, 255, 255, .06));
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+            animation: chipPop .4s cubic-bezier(.34, 1.56, .64, 1) backwards;
+        }
+
+        .fp-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .fp-item.selected {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, .5);
+        }
+
+        .fp-thumb {
+            height: 86px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, .18);
+        }
+
+        .fp-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .fp-thumb-icon {
+            font-size: 2.2rem;
+        }
+
+        .fp-thumb-text {
+            display: block;
+            padding: 6px;
+            font: 10px/1.3 'Space Mono', monospace;
+            text-align: left;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow: hidden;
+        }
+
+        .fp-name {
+            margin-top: 6px;
+            font-size: .78rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .fp-size {
+            font-size: .7rem;
+            opacity: .7;
+        }
+
+        .fp-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            line-height: 1;
+            color: #fff;
+            background: rgba(239, 68, 68, .9);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        .fp-item:hover .fp-remove,
+        .fp-remove:focus {
+            opacity: 1;
+        }
+
+        .fp-remove:hover {
+            transform: scale(1.15);
+        }
+
+        .fp-preview-pane {
+            min-height: 260px;
+            max-height: 340px;
+            overflow: auto;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, .25));
+            background: rgba(0, 0, 0, .15);
+        }
+
+        .fp-preview-pane img,
+        .fp-preview-pane video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+
+        .fp-preview-pane iframe {
+            width: 100%;
+            height: 300px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .fp-preview-pane pre {
+            width: 100%;
+            margin: 0;
+            text-align: left;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 12px;
+        }
+
+        .fp-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .fp-footer .fp-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .fp-footer button {
+            width: auto;
+            margin: 0;
+            padding: 9px 18px;
+        }
+
+        .fp-empty {
+            text-align: center;
+            padding: 30px 10px;
+            opacity: .75;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 720px) {
+            .fp-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ---------- 4. History ---------- */
+        .history-panel {
+            margin-top: 22px;
+            padding: 14px 16px;
+            text-align: left;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, .25));
+            background: var(--glass-bg, rgba(255, 255, 255, .06));
+            animation: chipPop .45s ease backwards;
+        }
+
+        .history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .history-head h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .history-head small {
+            font-weight: 500;
+            opacity: .65;
+            margin-left: 6px;
+        }
+
+        .history-clear {
+            width: auto;
+            margin: 0;
+            padding: 4px 12px;
+            font-size: .75rem;
+        }
+
+        .history-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 4px;
+            border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, .15));
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-icon {
+            font-size: 1.3rem;
+        }
+
+        .history-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-code {
+            font: 700 1rem 'Space Mono', monospace;
+            letter-spacing: 2px;
+            color: var(--accent-color, #7090cc);
+        }
+
+        .history-names {
+            font-size: .8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-time {
+            font-size: .7rem;
+            opacity: .6;
+        }
+
+        .history-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .history-btns button {
+            width: auto;
+            margin: 0;
+            padding: 5px 10px;
+            font-size: .75rem;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .drop-zone,
+            .drop-zone *,
+            .dz-chip,
+            .fp-item,
+            .fp-badge,
+            .history-panel {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -337,13 +911,18 @@
                     </svg>
                 </div>
 
-                <!-- Flight Deck Footer: Hint & Test Flight Trigger -->
+                <!-- Flight Deck Footer: Hint, Cancel & Test Flight -->
                 <div class="flight-deck-footer">
                     <span id="uploadProgressHint" class="progress-hint">Your share link is being prepared.</span>
-                    <button type="button" id="previewFlightBtn" class="preview-flight-btn"
-                        title="Preview the flight animation">
-                        ✦ Test Flight
-                    </button>
+                    <div class="flight-deck-actions">
+                        <button type="button" id="cancelUploadBtn" class="cancel-upload-btn" title="Cancel this upload">
+                            ✕ Cancel Upload
+                        </button>
+                        <button type="button" id="previewFlightBtn" class="preview-flight-btn"
+                            title="Preview the flight animation">
+                            ✦ Test Flight
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -412,14 +991,34 @@
                     <textarea id="textContent" name="text_content" rows="5"
                         placeholder="Paste text snippet here..."></textarea>
                     <div id="dropZone" class="drop-zone">
-                        <p><strong>Drag & drop a file here</strong> or click to select</p>
+                        <span class="dz-icon" aria-hidden="true">☁️</span>
+                        <p><strong>Drag & drop files here</strong> or click to select</p>
+                        <div id="dzChips" class="dz-chips"></div>
                         <input type="file" id="fileInput" name="file" class="hidden" multiple>
                     </div>
+
+                    <!-- NEW: opens multi-file preview popup -->
+                    <button type="button" id="openFilePickerBtn" class="fp-open-btn">
+                        <span aria-hidden="true">🗂️</span>
+                        <span id="openFilePickerText">Select &amp; Preview Files</span>
+                        <span id="fpBadge" class="fp-badge hidden">0</span>
+                    </button>
+
                     <button id="generateBtn" type="submit" style="margin-top: 20px;">Generate Code</button>
                     <button id="updateBtn" type="button" class="hidden" style="margin-top: 20px;" disabled>Update
                         Text</button>
                 </form>
                 <div id="uploadResult" class="hidden"></div>
+
+                <!-- NEW: last 12 hours history -->
+                <div id="historyPanel" class="history-panel hidden">
+                    <div class="history-head">
+                        <h3>Recent shares <small>last 12 hours</small></h3>
+                        <button type="button" id="clearHistoryBtn"
+                            class="button button-secondary history-clear">Clear</button>
+                    </div>
+                    <ul id="historyList" class="history-list"></ul>
+                </div>
             </div>
         </div>
     </div>
@@ -478,10 +1077,68 @@
         </div>
     </div>
 
+    <!-- NEW: multi-file select & preview popup (kept outside the upload form) -->
+    <div id="fileModal" class="modal hidden" aria-hidden="true">
+        <div class="modal-backdrop" data-close-files="true"></div>
+        <div class="modal-card fp-card" role="dialog" aria-modal="true" aria-labelledby="fpTitle">
+            <button id="fpCloseBtn" class="modal-close" type="button" aria-label="Close file picker">×</button>
+            <p class="modal-tag">Before you upload</p>
+            <h3 id="fpTitle">Select &amp; preview files</h3>
+            <p class="modal-sub">Add as many files as you like, click one to preview it, remove the ones you don't want.
+            </p>
+
+            <div id="fpDrop" class="fp-drop">
+                <p style="margin:0;"><strong>➕ Click to add files</strong> or drag &amp; drop them here</p>
+                <input type="file" id="fpInput" class="hidden" multiple>
+            </div>
+
+            <div class="fp-layout">
+                <div id="fpGrid" class="fp-grid"></div>
+                <div id="fpPreview" class="fp-preview-pane">
+                    <p style="opacity:.7; margin:0;">Select a file to preview it here.</p>
+                </div>
+            </div>
+
+            <div class="fp-footer">
+                <span id="fpSummary">No files selected</span>
+                <div class="fp-actions">
+                    <button type="button" id="fpClearBtn" class="button button-secondary">Clear all</button>
+                    <button type="button" id="fpCancelBtn" class="button button-secondary">Cancel</button>
+                    <button type="button" id="fpConfirmBtn" class="button" disabled>Use files</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // for run locally
         // const API_BASE_URL = "/backend";
         const API_BASE_URL = "https://genius-angeles-compromise-innovations.trycloudflare.com";
+
+        // ---------- Small helpers ----------
+        const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+        const getExt = (name) => (name.includes('.') ? name.split('.').pop().toLowerCase() : '');
+        const formatSize = (bytes) => {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+            if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+            return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+        };
+        const IMG_EXT = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
+        const VIDEO_EXT = ['mp4', 'webm', 'ogg', 'mov'];
+        const AUDIO_EXT = ['mp3', 'wav', 'm4a', 'aac', 'flac'];
+        const TEXT_EXT = ['txt', 'md', 'json', 'js', 'ts', 'html', 'css', 'py', 'java', 'c', 'cpp', 'cs', 'sql', 'sh', 'xml', 'yaml', 'yml', 'log', 'csv', 'env', 'ini'];
+        const fileIcon = (ext) => {
+            if (IMG_EXT.includes(ext)) return '🖼️';
+            if (ext === 'pdf') return '📘';
+            if (VIDEO_EXT.includes(ext)) return '🎬';
+            if (AUDIO_EXT.includes(ext)) return '🎵';
+            if (['zip', 'rar', 'tar', 'gz', '7z'].includes(ext)) return '🗜️';
+            if (TEXT_EXT.includes(ext)) return '📄';
+            return '📎';
+        };
 
         // ✨ --- 3. JAVASCRIPT FOR LOADER & THEME --- ✨
         const loaderContainer = document.getElementById('loaderContainer');
@@ -489,8 +1146,6 @@
         const contactBtn = document.getElementById('contactBtn');
         const contactModal = document.getElementById('contactModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        // const contactForm = document.getElementById('contactForm');
-        // const contactStatus = document.getElementById('contactStatus');
 
         // =========================================================
         // ✨ QUICK SHARE SKYWAY FLIGHT CONTROLLER (DRAGON / JET) ✨
@@ -518,6 +1173,7 @@
         const flightVelocity = document.getElementById('flightVelocity');
         const flightStatus = document.getElementById('flightStatus');
         const previewFlightBtn = document.getElementById('previewFlightBtn');
+        const cancelUploadBtn = document.getElementById('cancelUploadBtn');
         const gate1 = document.getElementById('gate1');
         const gate2 = document.getElementById('gate2');
         const warpPortal = document.getElementById('warpPortal');
@@ -678,6 +1334,10 @@
             currentFlightPercent = 0;
             targetFlightPercent = 0;
             renderFlightState(0);
+            if (cancelUploadBtn) {
+                cancelUploadBtn.disabled = false;
+                cancelUploadBtn.textContent = '✕ Cancel Upload';
+            }
             uploadProgress?.classList.toggle('hidden', !showProgress);
             loaderContainer?.classList.toggle('upload-mode', showProgress);
             loaderContainer?.classList.remove('hidden');
@@ -730,9 +1390,15 @@
             runTestFlight();
         });
 
+        // =========================================================
+        // ✨ UPLOAD WITH PROGRESS + CANCELLATION ✨
+        // =========================================================
+        let activeUploadXhr = null;
+
         function uploadWithProgress(url, formData) {
             return new Promise((resolve, reject) => {
                 const request = new XMLHttpRequest();
+                activeUploadXhr = request;
                 request.open('POST', url);
                 request.upload.addEventListener('progress', (event) => {
                     if (event.lengthComputable) {
@@ -740,6 +1406,7 @@
                     }
                 });
                 request.addEventListener('load', () => {
+                    if (activeUploadXhr === request) activeUploadXhr = null;
                     if (request.status >= 200 && request.status < 300) {
                         try {
                             resolve({ json: () => Promise.resolve(JSON.parse(request.responseText)) });
@@ -750,11 +1417,39 @@
                         reject(new Error(request.responseText || 'Upload failed!'));
                     }
                 });
-                request.addEventListener('error', () => reject(new Error('Upload failed. Please check your connection.')));
-                request.addEventListener('abort', () => reject(new Error('Upload was cancelled.')));
+                request.addEventListener('error', () => {
+                    if (activeUploadXhr === request) activeUploadXhr = null;
+                    reject(new Error('Upload failed. Please check your connection.'));
+                });
+                request.addEventListener('abort', () => {
+                    if (activeUploadXhr === request) activeUploadXhr = null;
+                    const err = new Error('Upload cancelled.');
+                    err.name = 'AbortError';
+                    reject(err);
+                });
                 request.send(formData);
             });
         }
+
+        function handleUploadError(error) {
+            if (error && error.name === 'AbortError') {
+                showMessage(uploadResult, '🛑 Upload cancelled. Nothing was shared, your files are still selected.');
+            } else {
+                console.error(error);
+                showMessage(uploadResult, escapeHtml(error.message || 'Upload failed!'), true);
+            }
+        }
+
+        cancelUploadBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cancelUploadBtn.disabled = true;
+            cancelUploadBtn.textContent = 'Cancelling...';
+            if (activeUploadXhr) {
+                activeUploadXhr.abort();   // rejects with AbortError -> handled by handleUploadError
+            } else {
+                hideLoader();              // nothing in flight (e.g. test flight)
+            }
+        });
 
         // Loader on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -816,23 +1511,11 @@
             }
         });
 
-        // contactForm.addEventListener('submit', (event) => {
-        //     event.preventDefault();
-        //     const name = document.getElementById('contactName').value.trim();
-        //     const email = document.getElementById('contactEmail').value.trim();
-        //     const message = document.getElementById('contactMessage').value.trim();
-
-        //     const subject = encodeURIComponent(`Quick Share contact from ${name}`);
-        //     const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-
-        //     contactStatus.textContent = 'Opening your mail app to send the message.';
-        //     contactStatus.classList.remove('hidden');
-
-        //     window.location.href = `mailto:rohitadak0@gmail.com?subject=${subject}&body=${body}`;
-        // });
-
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !contactModal.classList.contains('hidden')) {
+            if (event.key !== 'Escape') return;
+            if (!fileModal.classList.contains('hidden')) {
+                closeFileModal();
+            } else if (!contactModal.classList.contains('hidden')) {
                 closeContactModal();
             }
         });
@@ -851,6 +1534,10 @@
         const textContent = document.getElementById('textContent');
         const generateBtn = document.getElementById('generateBtn');
         const updateBtn = document.getElementById('updateBtn');
+        const dzChips = document.getElementById('dzChips');
+        const openFilePickerBtn = document.getElementById('openFilePickerBtn');
+        const openFilePickerText = document.getElementById('openFilePickerText');
+        const fpBadge = document.getElementById('fpBadge');
 
         let currentCode = null;
         let originalText = "";
@@ -866,10 +1553,12 @@
             currentCode = null;
             originalText = "";
             uploadForm.reset();
+            clearStaged();
             generateBtn.classList.remove('hidden');
             updateBtn.classList.add('hidden');
             dropZone.classList.remove('hidden');
-            dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+            openFilePickerBtn.classList.remove('hidden');
+            renderHistory();
         }
 
         function showContentView() {
@@ -892,7 +1581,7 @@
                         viewUrl,
                         timestamp: Date.now()
                     }));
-                } catch (e) {}
+                } catch (e) { }
             }
 
             uploadResult.innerHTML = `
@@ -944,55 +1633,486 @@
                 if (Date.now() - data.timestamp < 3600000) {
                     renderUploadSuccess(data.code, data.headline, data.detailsHtml, data.viewUrl, false);
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
 
         function clearSavedUpload() {
             try {
                 sessionStorage.removeItem('quickshare_saved_upload');
-            } catch (e) {}
+            } catch (e) { }
             uploadResult.classList.add('hidden');
             uploadResult.innerHTML = '';
         }
 
+        // =========================================================
+        // ✨ STAGED FILES (single source of truth for selected files) ✨
+        // =========================================================
+        let stagedFiles = [];
+        const DROP_DEFAULT_HTML = '<strong>Drag & drop files here</strong> or click to select';
+
+        function updateDropZoneUI() {
+            const p = dropZone.querySelector('p');
+            dzChips.innerHTML = '';
+            if (!stagedFiles.length) {
+                p.innerHTML = DROP_DEFAULT_HTML;
+                fpBadge.classList.add('hidden');
+                openFilePickerText.textContent = 'Select & Preview Files';
+                return;
+            }
+            p.innerHTML = `<strong>${stagedFiles.length} file${stagedFiles.length > 1 ? 's' : ''} selected</strong> · click to change`;
+            stagedFiles.slice(0, 4).forEach((f, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'dz-chip';
+                chip.style.animationDelay = `${i * 60}ms`;
+                chip.textContent = `${fileIcon(getExt(f.name))} ${f.name}`;
+                chip.title = f.name;
+                dzChips.appendChild(chip);
+            });
+            if (stagedFiles.length > 4) {
+                const more = document.createElement('span');
+                more.className = 'dz-chip';
+                more.textContent = `+${stagedFiles.length - 4} more`;
+                dzChips.appendChild(more);
+            }
+            fpBadge.textContent = stagedFiles.length;
+            fpBadge.classList.remove('hidden');
+            openFilePickerText.textContent = 'Review Selected Files';
+        }
+
+        function commitFiles(files) {
+            stagedFiles = Array.from(files);
+            try {
+                const dt = new DataTransfer();
+                stagedFiles.forEach(f => dt.items.add(f));
+                fileInput.files = dt.files;
+            } catch (e) {
+                console.warn('Could not sync file input', e);
+            }
+            if (stagedFiles.length) textContent.value = '';
+            updateDropZoneUI();
+        }
+
+        function clearStaged() {
+            stagedFiles = [];
+            fileInput.value = '';
+            updateDropZoneUI();
+        }
+
+        // ---------- Drag & drop animation ----------
+        let dzDepth = 0;
+        let winDepth = 0;
+        const hasFiles = (e) => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+
+        function spawnRipple(e) {
+            const rect = dropZone.getBoundingClientRect();
+            const r = document.createElement('span');
+            r.className = 'dz-ripple';
+            r.style.left = `${(e.clientX || rect.left + rect.width / 2) - rect.left}px`;
+            r.style.top = `${(e.clientY || rect.top + rect.height / 2) - rect.top}px`;
+            dropZone.appendChild(r);
+            setTimeout(() => r.remove(), 750);
+        }
+
+        function landAnimation() {
+            dropZone.classList.remove('dz-landed');
+            void dropZone.offsetWidth; // restart animation
+            dropZone.classList.add('dz-landed');
+            setTimeout(() => dropZone.classList.remove('dz-landed'), 600);
+        }
+
+        // Highlight the drop zone as soon as a file is dragged anywhere over the page
+        window.addEventListener('dragenter', (e) => {
+            if (!hasFiles(e)) return;
+            winDepth++;
+            dropZone.classList.add('dz-armed');
+        });
+        window.addEventListener('dragleave', (e) => {
+            if (!hasFiles(e)) return;
+            winDepth = Math.max(0, winDepth - 1);
+            if (winDepth === 0) dropZone.classList.remove('dz-armed');
+        });
+        window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault(); });
+        window.addEventListener('drop', (e) => {
+            if (hasFiles(e)) e.preventDefault();
+            winDepth = 0;
+            dzDepth = 0;
+            dropZone.classList.remove('dz-armed', 'drag-over');
+        });
+
         dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dzDepth++;
+            dropZone.classList.add('drag-over');
+        });
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('dragleave', () => {
+            dzDepth = Math.max(0, dzDepth - 1);
+            if (dzDepth === 0) dropZone.classList.remove('drag-over');
+        });
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('drag-over');
+            dzDepth = 0;
+            dropZone.classList.remove('drag-over', 'dz-armed');
             if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-
-                const fileNames = Array.from(e.dataTransfer.files).map(f => f.name).join(', ');
-                dropZone.querySelector('p').textContent = `${fileNames} selected`;
-
-                textContent.value = "";
+                spawnRipple(e);
+                landAnimation();
+                commitFiles(e.dataTransfer.files);
             }
         });
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length) {
-                const fileNames = Array.from(fileInput.files).map(f => f.name).join(', ');
-                dropZone.querySelector('p').textContent = `${fileNames} selected`;
-                textContent.value = "";
+                commitFiles(fileInput.files);
+                landAnimation();
+            } else {
+                stagedFiles = [];
+                updateDropZoneUI();
             }
         });
 
+        // =========================================================
+        // ✨ MULTI-FILE SELECT & PREVIEW POPUP ✨
+        // =========================================================
+        const fileModal = document.getElementById('fileModal');
+        const fpCloseBtn = document.getElementById('fpCloseBtn');
+        const fpDrop = document.getElementById('fpDrop');
+        const fpInput = document.getElementById('fpInput');
+        const fpGrid = document.getElementById('fpGrid');
+        const fpPreview = document.getElementById('fpPreview');
+        const fpSummary = document.getElementById('fpSummary');
+        const fpClearBtn = document.getElementById('fpClearBtn');
+        const fpCancelBtn = document.getElementById('fpCancelBtn');
+        const fpConfirmBtn = document.getElementById('fpConfirmBtn');
+
+        let draftFiles = [];
+        let draftUrls = new Map();
+        let previewIndex = -1;
+
+        const fileKey = (f) => `${f.name}|${f.size}|${f.lastModified}`;
+        function draftUrl(file) {
+            if (!draftUrls.has(file)) draftUrls.set(file, URL.createObjectURL(file));
+            return draftUrls.get(file);
+        }
+        function revokeDraftUrls() {
+            draftUrls.forEach(u => URL.revokeObjectURL(u));
+            draftUrls.clear();
+        }
+
+        function openFileModal() {
+            draftFiles = stagedFiles.slice();
+            previewIndex = draftFiles.length ? 0 : -1;
+            renderDraft();
+            renderPreviewPane();
+            fileModal.classList.remove('hidden');
+            fileModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeFileModal() {
+            fileModal.classList.add('hidden');
+            fileModal.setAttribute('aria-hidden', 'true');
+            revokeDraftUrls();
+            fpPreview.innerHTML = '';
+            fpInput.value = '';
+        }
+
+        function addDraftFiles(fileList) {
+            const existing = new Set(draftFiles.map(fileKey));
+            Array.from(fileList).forEach(f => {
+                if (!existing.has(fileKey(f))) {
+                    draftFiles.push(f);
+                    existing.add(fileKey(f));
+                }
+            });
+            if (previewIndex === -1 && draftFiles.length) previewIndex = 0;
+            renderDraft();
+            renderPreviewPane();
+        }
+
+        function selectDraft(i) {
+            previewIndex = i;
+            Array.from(fpGrid.querySelectorAll('.fp-item')).forEach((el, idx) => {
+                el.classList.toggle('selected', idx === i);
+            });
+            renderPreviewPane();
+        }
+
+        function removeDraft(i) {
+            const [removed] = draftFiles.splice(i, 1);
+            if (removed && draftUrls.has(removed)) {
+                URL.revokeObjectURL(draftUrls.get(removed));
+                draftUrls.delete(removed);
+            }
+            if (!draftFiles.length) previewIndex = -1;
+            else if (previewIndex >= draftFiles.length) previewIndex = draftFiles.length - 1;
+            else if (i < previewIndex) previewIndex--;
+            renderDraft();
+            renderPreviewPane();
+        }
+
+        function renderDraft() {
+            fpGrid.innerHTML = '';
+            if (!draftFiles.length) {
+                fpGrid.innerHTML = '<div class="fp-empty">📂<br>No files yet. Add some above.</div>';
+            }
+            draftFiles.forEach((file, i) => {
+                const ext = getExt(file.name);
+                const item = document.createElement('div');
+                item.className = 'fp-item' + (i === previewIndex ? ' selected' : '');
+                item.style.animationDelay = `${Math.min(i, 10) * 35}ms`;
+
+                const thumb = document.createElement('div');
+                thumb.className = 'fp-thumb';
+                if (IMG_EXT.includes(ext)) {
+                    const img = document.createElement('img');
+                    img.src = draftUrl(file);
+                    img.alt = '';
+                    img.loading = 'lazy';
+                    thumb.appendChild(img);
+                } else if (TEXT_EXT.includes(ext)) {
+                    thumb.classList.add('fp-thumb-text');
+                    thumb.textContent = '...';
+                    file.slice(0, 200).text()
+                        .then(t => { thumb.textContent = t || '(empty file)'; })
+                        .catch(() => { thumb.textContent = '📄'; });
+                } else {
+                    thumb.classList.add('fp-thumb-icon');
+                    thumb.textContent = fileIcon(ext);
+                }
+
+                const name = document.createElement('div');
+                name.className = 'fp-name';
+                name.textContent = file.name;
+                name.title = file.name;
+
+                const size = document.createElement('div');
+                size.className = 'fp-size';
+                size.textContent = formatSize(file.size);
+
+                const rm = document.createElement('button');
+                rm.type = 'button';
+                rm.className = 'fp-remove';
+                rm.setAttribute('aria-label', `Remove ${file.name}`);
+                rm.textContent = '×';
+                rm.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeDraft(i);
+                });
+
+                item.append(thumb, name, size, rm);
+                item.addEventListener('click', () => selectDraft(i));
+                fpGrid.appendChild(item);
+            });
+
+            const total = draftFiles.reduce((s, f) => s + f.size, 0);
+            fpSummary.textContent = draftFiles.length
+                ? `${draftFiles.length} file${draftFiles.length > 1 ? 's' : ''} · ${formatSize(total)}`
+                : 'No files selected';
+            fpConfirmBtn.disabled = draftFiles.length === 0;
+            fpConfirmBtn.textContent = draftFiles.length ? `Use ${draftFiles.length} file${draftFiles.length > 1 ? 's' : ''}` : 'Use files';
+        }
+
+        function renderPreviewPane() {
+            fpPreview.innerHTML = '';
+            const file = draftFiles[previewIndex];
+            if (!file) {
+                fpPreview.innerHTML = '<p style="opacity:.7; margin:0;">Select a file to preview it here.</p>';
+                return;
+            }
+            const ext = getExt(file.name);
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight:700; margin-bottom:8px; word-break:break-all;';
+            title.textContent = `${file.name} (${formatSize(file.size)})`;
+            fpPreview.appendChild(title);
+
+            if (IMG_EXT.includes(ext)) {
+                const img = document.createElement('img');
+                img.src = draftUrl(file);
+                img.alt = file.name;
+                fpPreview.appendChild(img);
+            } else if (ext === 'pdf') {
+                const frame = document.createElement('iframe');
+                frame.src = draftUrl(file);
+                frame.title = file.name;
+                fpPreview.appendChild(frame);
+            } else if (VIDEO_EXT.includes(ext)) {
+                const v = document.createElement('video');
+                v.src = draftUrl(file);
+                v.controls = true;
+                fpPreview.appendChild(v);
+            } else if (AUDIO_EXT.includes(ext)) {
+                const a = document.createElement('audio');
+                a.src = draftUrl(file);
+                a.controls = true;
+                a.style.width = '100%';
+                fpPreview.appendChild(a);
+            } else if (TEXT_EXT.includes(ext)) {
+                const pre = document.createElement('pre');
+                pre.textContent = 'Loading preview...';
+                fpPreview.appendChild(pre);
+                const idx = previewIndex;
+                file.slice(0, 20000).text().then(t => {
+                    if (previewIndex === idx) pre.textContent = t + (file.size > 20000 ? '\n\n... (preview truncated)' : '');
+                }).catch(() => { pre.textContent = 'Could not read this file.'; });
+            } else {
+                const box = document.createElement('div');
+                box.innerHTML = `<div style="font-size:48px;">${fileIcon(ext)}</div><p style="opacity:.75; margin:8px 0 0;">No inline preview for .${escapeHtml(ext || 'this')} files, but it will upload fine.</p>`;
+                fpPreview.appendChild(box);
+            }
+        }
+
+        openFilePickerBtn.addEventListener('click', openFileModal);
+        fpCloseBtn.addEventListener('click', closeFileModal);
+        fpCancelBtn.addEventListener('click', closeFileModal);
+        fileModal.addEventListener('click', (e) => {
+            if (e.target.closest('[data-close-files="true"]')) closeFileModal();
+        });
+        fpDrop.addEventListener('click', () => fpInput.click());
+        fpInput.addEventListener('change', () => {
+            addDraftFiles(fpInput.files);
+            fpInput.value = '';
+        });
+        fpDrop.addEventListener('dragover', (e) => { e.preventDefault(); fpDrop.classList.add('drag-over'); });
+        fpDrop.addEventListener('dragleave', () => fpDrop.classList.remove('drag-over'));
+        fpDrop.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fpDrop.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) addDraftFiles(e.dataTransfer.files);
+        });
+        fpClearBtn.addEventListener('click', () => {
+            revokeDraftUrls();
+            draftFiles = [];
+            previewIndex = -1;
+            renderDraft();
+            renderPreviewPane();
+        });
+        fpConfirmBtn.addEventListener('click', () => {
+            const picked = draftFiles.slice();
+            closeFileModal();
+            commitFiles(picked);
+            landAnimation();
+        });
+
+        // =========================================================
+        // ✨ HISTORY (last 12 hours, stored in this browser) ✨
+        // =========================================================
+        const HISTORY_KEY = 'quickshare_history_v1';
+        const HISTORY_TTL = 12 * 60 * 60 * 1000;
+        const historyPanel = document.getElementById('historyPanel');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        function loadHistory() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                const cutoff = Date.now() - HISTORY_TTL;
+                const fresh = Array.isArray(raw) ? raw.filter(h => h && h.code && h.time > cutoff) : [];
+                if (!Array.isArray(raw) || fresh.length !== raw.length) {
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(fresh));
+                }
+                return fresh;
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveHistory(list) {
+            try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) { }
+        }
+
+        function addHistory(entry) {
+            const list = loadHistory().filter(h => h.code !== entry.code);
+            list.unshift({ ...entry, time: Date.now() });
+            saveHistory(list.slice(0, 30));
+            renderHistory();
+        }
+
+        function updateHistoryNames(code, names) {
+            const list = loadHistory();
+            const item = list.find(h => h.code === code);
+            if (item) {
+                item.names = names;
+                saveHistory(list);
+                renderHistory();
+            }
+        }
+
+        function timeAgo(ts) {
+            const mins = Math.floor((Date.now() - ts) / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return `${mins} min ago`;
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return m ? `${h}h ${m}m ago` : `${h}h ago`;
+        }
+
+        function renderHistory() {
+            const list = loadHistory();
+            historyPanel.classList.toggle('hidden', list.length === 0);
+            historyList.innerHTML = list.map(h => {
+                const names = h.names || [];
+                const shown = names.slice(0, 2).map(escapeHtml).join(', ') + (names.length > 2 ? ` +${names.length - 2} more` : '');
+                const icon = h.kind === 'text' ? '📝' : h.kind === 'multiple' ? '📁' : fileIcon(getExt(names[0] || ''));
+                return `
+                    <li class="history-item">
+                        <span class="history-icon">${icon}</span>
+                        <div class="history-main">
+                            <div class="history-code">${escapeHtml(h.code)}</div>
+                            <div class="history-names" title="${escapeHtml(names.join(', '))}">${shown || 'Shared item'}</div>
+                            <div class="history-time">${timeAgo(h.time)}</div>
+                        </div>
+                        <div class="history-btns">
+                            <button type="button" class="button button-secondary" data-h-action="copy" data-code="${escapeHtml(h.code)}">Copy</button>
+                            <button type="button" class="button" data-h-action="get" data-code="${escapeHtml(h.code)}">Open</button>
+                        </div>
+                    </li>`;
+            }).join('');
+        }
+
+        historyList.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-h-action]');
+            if (!btn) return;
+            const code = btn.dataset.code;
+            if (btn.dataset.hAction === 'copy') {
+                navigator.clipboard.writeText(code).then(() => {
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+                });
+            } else {
+                codeInput.value = code;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (retrieveForm.requestSubmit) retrieveForm.requestSubmit();
+                else retrieveForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        });
+
+        clearHistoryBtn.addEventListener('click', () => {
+            saveHistory([]);
+            renderHistory();
+        });
+
+        // Keep "x min ago" fresh and drop expired entries
+        setInterval(renderHistory, 60000);
+
+        // =========================================================
+        // FILE PREVIEW (retrieve side)
+        // =========================================================
         function renderFilePreview(fileName, fileUrl, onBack) {
             const ext = fileName.split('.').pop().toLowerCase();
             const downloadUrl = `${fileUrl}${fileUrl.includes('?') ? '&' : '?'}download=true`;
+            const safeName = escapeHtml(fileName);
 
             contentView.innerHTML = `
                 <div class="file-preview-card" style="margin-top: 15px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                         <div>
                             <h2 style="margin: 0; font-size: 1.35rem; color: var(--text-color, #fff); display: flex; align-items: center; gap: 8px;">
-                                <span>👁️</span> <span style="word-break: break-all;">${fileName}</span>
+                                <span>👁️</span> <span style="word-break: break-all;">${safeName}</span>
                             </h2>
-                            <span style="font-size: 0.85rem; color: var(--accent-color, #7090cc); font-weight: 600; text-transform: uppercase;">${ext} preview</span>
+                            <span style="font-size: 0.85rem; color: var(--accent-color, #7090cc); font-weight: 600; text-transform: uppercase;">${escapeHtml(ext)} preview</span>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <a href="${downloadUrl}" download="${fileName}" class="button" style="width: auto; padding: 10px 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem;">
+                            <a href="${downloadUrl}" download="${safeName}" class="button" style="width: auto; padding: 10px 20px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.95rem;">
                                 ⬇️ Download File
                             </a>
                         </div>
@@ -1085,7 +2205,7 @@
                         mediaContainer.appendChild(pre);
                     })
                     .catch(err => {
-                        mediaContainer.innerHTML = `<p style="color: #ef4444;">Unable to load text preview: ${err.message}</p>`;
+                        mediaContainer.innerHTML = `<p style="color: #ef4444;">Unable to load text preview: ${escapeHtml(err.message)}</p>`;
                     });
             }
             // 6. Non-inline previewable file formats (zip, docx, exe, etc.)
@@ -1095,10 +2215,10 @@
                         <div style="font-size: 48px; margin-bottom: 12px;">📁</div>
                         <h4 style="margin: 0 0 8px; color: var(--text-color, #fff);">Inline preview not available</h4>
                         <p style="margin: 0 0 18px; color: var(--text-muted, #94a3b8); font-size: 0.9rem;">
-                            This file format (.${ext}) cannot be displayed directly in the browser.
+                            This file format (.${escapeHtml(ext)}) cannot be displayed directly in the browser.
                         </p>
-                        <a href="${downloadUrl}" download="${fileName}" class="button" style="width: auto; padding: 10px 24px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                            ⬇️ Download ${fileName}
+                        <a href="${downloadUrl}" download="${safeName}" class="button" style="width: auto; padding: 10px 24px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            ⬇️ Download ${safeName}
                         </a>
                     </div>
                 `;
@@ -1188,17 +2308,11 @@
                             }
                             // 📎 Icons for other types
                             else {
-                                const fileIcon = document.createElement('div');
-                                let icon = "📎";
-                                if (ext === "pdf") icon = "📘";
-                                else if (["mp4", "webm", "mov"].includes(ext)) icon = "🎬";
-                                else if (["mp3", "wav", "ogg", "m4a"].includes(ext)) icon = "🎵";
-                                else if (["zip", "rar", "tar", "gz", "7z"].includes(ext)) icon = "🗜️";
-
-                                fileIcon.textContent = icon;
-                                fileIcon.style.fontSize = "36px";
-                                fileIcon.style.margin = "12px 0 8px";
-                                card.appendChild(fileIcon);
+                                const iconEl = document.createElement('div');
+                                iconEl.textContent = fileIcon(ext);
+                                iconEl.style.fontSize = "36px";
+                                iconEl.style.margin = "12px 0 8px";
+                                card.appendChild(iconEl);
                             }
 
                             // Preview button
@@ -1279,7 +2393,7 @@
                     }
 
                 } catch (error) {
-                    showMessage(retrieveResult, error.message, true);
+                    showMessage(retrieveResult, escapeHtml(error.message), true);
                 }
             });
         });
@@ -1289,11 +2403,15 @@
                 const isModified = textContent.value !== originalText;
                 updateBtn.disabled = !isModified;
             }
-            if (textContent.value) {
-                fileInput.value = '';
-                dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+            if (textContent.value && stagedFiles.length) {
+                clearStaged();
             }
         });
+
+        const snippetLabel = (text) => {
+            const flat = text.replace(/\s+/g, ' ').trim();
+            return `Text snippet: "${flat.slice(0, 40)}${flat.length > 40 ? '…' : ''}"`;
+        };
 
         uploadForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -1321,7 +2439,7 @@
 
                         const viewUrl = `${API_BASE_URL}/view/${data.code}`;
                         const fileList = `<ul style="margin: 8px 0; padding-left: 20px; max-height: 120px; overflow-y: auto;">` +
-                            data.files.map(f => `<li>${f}</li>`).join('') + `</ul>`;
+                            data.files.map(f => `<li>${escapeHtml(f)}</li>`).join('') + `</ul>`;
 
                         renderUploadSuccess(
                             data.code,
@@ -1329,12 +2447,12 @@
                             fileList,
                             viewUrl
                         );
+                        addHistory({ code: data.code, kind: 'multiple', names: data.files });
 
                         uploadForm.reset();
-                        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+                        clearStaged();
                     } catch (error) {
-                        console.error(error);
-                        showMessage(uploadResult, error.message, true);
+                        handleUploadError(error);
                     }
                     return;
                 }
@@ -1353,15 +2471,16 @@
 
                         renderUploadSuccess(
                             data.code,
-                            `✅ File '<strong>${fileName}</strong>' uploaded successfully!`,
+                            `✅ File '<strong>${escapeHtml(fileName)}</strong>' uploaded successfully!`,
                             '',
                             viewUrl
                         );
+                        addHistory({ code: data.code, kind: 'file', names: [fileName] });
 
                         uploadForm.reset();
-                        dropZone.querySelector('p').textContent = 'Drag & drop a file here or click to select';
+                        clearStaged();
                     } catch (error) {
-                        showMessage(uploadResult, error.message, true);
+                        handleUploadError(error);
                     }
                     return;
                 }
@@ -1380,6 +2499,7 @@
                     updateBtn.classList.remove('hidden');
                     updateBtn.disabled = true;
                     dropZone.classList.add('hidden');
+                    openFilePickerBtn.classList.add('hidden');
 
                     const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
 
@@ -1389,8 +2509,9 @@
                         '',
                         viewUrl
                     );
+                    addHistory({ code: currentCode, kind: 'text', names: [snippetLabel(originalText)] });
                 } catch (error) {
-                    showMessage(uploadResult, error.message, true);
+                    handleUploadError(error);
                 }
             }, true);
         });
@@ -1411,18 +2532,19 @@
 
                 originalText = newText;
                 updateBtn.disabled = true;
+                updateHistoryNames(currentCode, [snippetLabel(newText)]);
 
-                // ✅ FIXED: Added API_BASE_URL to the view link
                 const viewUrl = `${API_BASE_URL}/view/${currentCode}`;
                 const successMessage = `<p>Snippet updated successfully! Your code is:</p><h2 style="letter-spacing: 2px;">${currentCode}</h2><a href="${viewUrl}" target="_blank">Open Sharable Link</a>`;
                 showMessage(uploadResult, successMessage);
 
             } catch (error) {
-                showMessage(uploadResult, error.message, true);
+                showMessage(uploadResult, escapeHtml(error.message), true);
             }
         });
 
-        // Restore any recent share code if the page was refreshed
+        // Initial render of history + restore any recent share code if the page was refreshed
+        renderHistory();
         restoreSavedUpload();
     </script>
     <script src="contact.js"></script>
