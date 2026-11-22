@@ -254,9 +254,21 @@ async def view_shared_content(code: str):
 
         html_content = f"""
         <html>
-        <head><title>Quick Share - {code}</title></head>
+        <head>
+            <title>Quick Share - {code}</title>
+            <style>
+                body {{ max-width: 1000px; margin: 30px auto !important; padding: 0 20px; color: #e5e7eb; background: #111827; }}
+                .share-code-copy {{ display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 420px; box-sizing: border-box; margin-bottom: 18px; padding: 8px 8px 8px 14px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(112,144,204,.12)); box-shadow: 0 8px 24px rgba(0,0,0,.18); }}
+                .share-code-copy h2 {{ display: flex; align-items: baseline; gap: 8px; margin: 0; color: #94a3b8; font-size: .72rem; text-transform: uppercase; letter-spacing: .7px; }}
+                .share-code-copy code {{ color: #7090cc; font-size: 1.05rem; letter-spacing: 2px; }}
+                .share-code-copy button {{ min-width: 68px; padding: 7px 12px; border: 0; border-radius: 9px; color: #fff; background: linear-gradient(120deg, #7090cc, #8b5cf6); cursor: pointer; font-weight: 700; }}
+            </style>
+        </head>
         <body style="font-family:Arial;margin:30px;">
-            <h2>📂 Files for code: {code}</h2>
+            <div class="share-code-copy">
+                <h2>Share code: <code>{html.escape(code)}</code></h2>
+                <button type="button" onclick="navigator.clipboard.writeText(this.dataset.code);this.textContent='Copied!';setTimeout(() => this.textContent='Copy', 2000)" data-code="{html.escape(code)}">Copy</button>
+            </div>
             {previews}
         </body>
         </html>
@@ -279,18 +291,18 @@ async def view_shared_content(code: str):
     if found_filename.endswith(".txt"):
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = html.escape(f.read())
-        return HTMLResponse(f"<pre>{content}</pre><br><a href='/get/{found_filename}?download=true'>Download</a>")
+        return HTMLResponse(f"<html><head><style>body{{max-width:1000px;margin:30px auto;padding:0 20px;font-family:Arial;background:#111827;color:#e5e7eb}}.code-card{{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:420px;padding:8px 8px 8px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(112,144,204,.12));box-shadow:0 8px 24px rgba(0,0,0,.18)}}.code-card strong{{font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px}}.code-card code{{color:#7090cc;font-size:1.05rem;letter-spacing:2px}}.code-card button{{min-width:68px;padding:7px 12px;border:0;border-radius:9px;color:#fff;background:linear-gradient(120deg,#7090cc,#8b5cf6);font-weight:700;cursor:pointer}}pre{{white-space:pre-wrap}}</style></head><body><div class='code-card'><strong>Share code <code>{html.escape(code)}</code></strong><button type='button' onclick=\"navigator.clipboard.writeText(this.dataset.code);this.textContent='Copied';setTimeout(() => this.textContent='Copy',2000)\" data-code='{html.escape(code)}'>Copy</button></div><pre>{content}</pre><br><a href='/get/{found_filename}?download=true' style='color:#7090cc'>Download</a></body></html>")
 
     # Other files: preview and download link
     file_url = f"/get/{found_filename}"
     download_url = f"/get/{found_filename}?download=true"
     ext = os.path.splitext(found_filename)[1].lower()
     if ext in [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".webp"]:
-        return HTMLResponse(f"<h3>🖼️ {found_filename}</h3><img src='{file_url}' style='max-width:100%;border-radius:10px;'><br><br><a href='{download_url}'>Download {found_filename}</a>")
+        return HTMLResponse(f"<html><head><style>body{{font-family:Arial;background:#111827;color:#e5e7eb;padding:30px}}.code-card{{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:420px;padding:8px 8px 8px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(112,144,204,.12));box-shadow:0 8px 24px rgba(0,0,0,.18)}}.code-card strong{{font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px}}.code-card code{{color:#7090cc;font-size:1.05rem;letter-spacing:2px}}.code-card button{{min-width:68px;padding:7px 12px;border:0;border-radius:9px;color:#fff;background:linear-gradient(120deg,#7090cc,#8b5cf6);font-weight:700;cursor:pointer}}</style></head><body><div class='code-card'><strong>Share code <code>{html.escape(code)}</code></strong><button type='button' onclick=\"navigator.clipboard.writeText(this.dataset.code);this.textContent='Copied';setTimeout(() => this.textContent='Copy',2000)\" data-code='{html.escape(code)}'>Copy</button></div><h3>🖼️ {found_filename}</h3><img src='{file_url}' style='max-width:100%;border-radius:10px;'><br><br><a href='{download_url}' style='color:#7090cc'>Download {found_filename}</a></body></html>")
     elif ext == ".pdf":
-        return HTMLResponse(f"<h3>📘 {found_filename}</h3><iframe src='{file_url}' width='100%' height='600px' style='border:none;'></iframe><br><br><a href='{download_url}'>Download {found_filename}</a>")
+        return HTMLResponse(f"<html><head><style>body{{font-family:Arial;background:#111827;color:#e5e7eb;padding:30px}}.code-card{{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:420px;padding:8px 8px 8px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(112,144,204,.12));box-shadow:0 8px 24px rgba(0,0,0,.18)}}.code-card strong{{font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px}}.code-card code{{color:#7090cc;font-size:1.05rem;letter-spacing:2px}}.code-card button{{min-width:68px;padding:7px 12px;border:0;border-radius:9px;color:#fff;background:linear-gradient(120deg,#7090cc,#8b5cf6);font-weight:700;cursor:pointer}}</style></head><body><div class='code-card'><strong>Share code <code>{html.escape(code)}</code></strong><button type='button' onclick=\"navigator.clipboard.writeText(this.dataset.code);this.textContent='Copied';setTimeout(() => this.textContent='Copy',2000)\" data-code='{html.escape(code)}'>Copy</button></div><h3>📘 {found_filename}</h3><iframe src='{file_url}' width='100%' height='600px' style='border:none;'></iframe><br><br><a href='{download_url}' style='color:#7090cc'>Download {found_filename}</a></body></html>")
 
-    return HTMLResponse(f"<a href='{download_url}'>Download {found_filename}</a>")
+    return HTMLResponse(f"<h2 style='font-size:1rem;'>Share code: <code>{html.escape(code)}</code> <button type='button' onclick=\"navigator.clipboard.writeText(this.dataset.code);this.textContent='Copied!';setTimeout(() => this.textContent='Copy', 2000)\" data-code='{html.escape(code)}'>Copy</button></h2><p>{html.escape(found_filename)}</p><a href='{download_url}'>Download {html.escape(found_filename)}</a>")
 
 
 @app.get("/get/{file_id}")

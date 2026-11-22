@@ -451,6 +451,75 @@
             grid-column: 1 / -1;
         }
 
+        /* ---------- 4. Modern Share Code Pill on Content Checkout ---------- */
+        .qs-code-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px 7px 14px;
+            margin-bottom: 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(0, 245, 212, 0.12));
+            border: 1px solid rgba(139, 92, 246, 0.34);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .qs-code-bar:hover {
+            transform: translateY(-1px);
+            border-color: rgba(0, 245, 212, 0.55);
+            box-shadow: 0 12px 28px rgba(124, 58, 237, 0.22);
+        }
+
+        .qs-code-tag {
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(124, 58, 237, 0.2);
+            color: #c4b5fd;
+        }
+
+        .qs-code-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--text-color, #ffffff);
+            user-select: all;
+        }
+
+        .qs-code-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: auto;
+            margin: 0;
+            padding: 6px 13px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: linear-gradient(135deg, #7c3aed, #2563eb);
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease, filter 0.2s ease, background 0.25s ease;
+        }
+
+        .qs-code-copy-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+        }
+
+        .qs-code-copy-btn.copied {
+            background: linear-gradient(135deg, #059669, #00c49a);
+            border-color: rgba(0, 245, 212, 0.5);
+        }
+
         @media (max-width: 720px) {
             .fp-layout {
                 grid-template-columns: 1fr;
@@ -463,7 +532,9 @@
             .drop-zone *,
             .dz-chip,
             .fp-item,
-            .fp-badge {
+            .fp-badge,
+            .qs-code-bar,
+            .qs-code-copy-btn {
                 animation: none !important;
                 transition: none !important;
             }
@@ -984,7 +1055,7 @@
     <script>
         // for run locally
         // const API_BASE_URL = "/backend";
-        const API_BASE_URL = "https://genius-angeles-compromise-innovations.trycloudflare.com";
+        const API_BASE_URL = "https://measurements-voip-cut-role.trycloudflare.com";
 
         // ---------- Small helpers ----------
         const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
@@ -1866,15 +1937,87 @@
         });
 
         // =========================================================
-        // FILE PREVIEW (retrieve side)
+        // FILE PREVIEW & MODERN CODE CHECKOUT BAR (retrieve side)
         // =========================================================
-        function renderFilePreview(fileName, fileUrl, onBack) {
+        function copyShareCodeToClipboard(code, valueEl, onCopied) {
+            const markCopied = () => {
+                if (valueEl) {
+                    const range = document.createRange();
+                    range.selectNodeContents(valueEl);
+                    const sel = window.getSelection();
+                    sel?.removeAllRanges();
+                    sel?.addRange(range);
+                }
+                if (typeof onCopied === 'function') onCopied();
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(code).then(markCopied).catch(() => {
+                    fallbackCopyText(code, markCopied);
+                });
+            } else {
+                fallbackCopyText(code, markCopied);
+            }
+        }
+
+        function fallbackCopyText(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+            } catch (e) { }
+            document.body.removeChild(ta);
+            if (typeof done === 'function') done();
+        }
+
+        function createShareCodeBar(code) {
+            const bar = document.createElement('div');
+            bar.className = 'qs-code-bar';
+
+            const tag = document.createElement('span');
+            tag.className = 'qs-code-tag';
+            tag.textContent = 'CODE';
+
+            const val = document.createElement('span');
+            val.className = 'qs-code-value';
+            val.textContent = code;
+            val.title = 'Click Copy to copy share code';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'qs-code-copy-btn';
+            copyBtn.innerHTML = '<span>⧉</span><span>Copy</span>';
+
+            let resetTimer = null;
+            copyBtn.addEventListener('click', () => {
+                copyShareCodeToClipboard(code, val, () => {
+                    copyBtn.classList.add('copied');
+                    copyBtn.innerHTML = '<span>✓</span><span>Copied</span>';
+                    clearTimeout(resetTimer);
+                    resetTimer = setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        copyBtn.innerHTML = '<span>⧉</span><span>Copy</span>';
+                    }, 2000);
+                });
+            });
+
+            bar.append(tag, val, copyBtn);
+            return bar;
+        }
+
+        function renderFilePreview(fileName, fileUrl, onBack, shareCode) {
             const ext = fileName.split('.').pop().toLowerCase();
             const downloadUrl = `${fileUrl}${fileUrl.includes('?') ? '&' : '?'}download=true`;
             const safeName = escapeHtml(fileName);
 
             contentView.innerHTML = `
                 <div class="file-preview-card" style="margin-top: 15px; text-align: left;">
+                    <div id="previewCodeSlot"></div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                         <div>
                             <h2 style="margin: 0; font-size: 1.35rem; color: var(--text-color, #fff); display: flex; align-items: center; gap: 8px;">
@@ -1897,6 +2040,10 @@
                     </div>
                 </div>
             `;
+
+            if (shareCode) {
+                document.getElementById('previewCodeSlot')?.appendChild(createShareCodeBar(shareCode));
+            }
 
             const mediaContainer = document.getElementById('previewMediaContainer');
             const backBtn = document.getElementById('previewBackBtn');
@@ -2012,7 +2159,7 @@
 
                     // 🧩 MULTIPLE FILES
                     if (data.type === 'multiple') {
-                        contentView.innerHTML = `<h1>📁 Files for Code: ${code}</h1>`;
+                        contentView.insertBefore(createShareCodeBar(code), contentView.firstChild);
 
                         const grid = document.createElement('div');
                         grid.style.display = "grid";
@@ -2096,10 +2243,11 @@
                             previewBtn.style.fontSize = "0.9em";
                             previewBtn.onclick = () => {
                                 renderFilePreview(f, fileUrl, () => {
-                                    contentView.innerHTML = `<h1>📁 Files for Code: ${code}</h1>`;
+                                    contentView.innerHTML = `<h1>📁 Files for Code: ${escapeHtml(code)}</h1>`;
+                                    contentView.insertBefore(createShareCodeBar(code), contentView.firstChild);
                                     contentView.appendChild(grid);
                                     contentView.appendChild(backBtn);
-                                });
+                                }, code);
                             };
 
                             // Download button
@@ -2133,12 +2281,14 @@
 
                     // 🧩 TEXT SNIPPET
                     if (data.type === 'text') {
+                        contentView.appendChild(createShareCodeBar(code));
+
                         const copyBtn = document.createElement('button');
                         copyBtn.type = 'button';
                         copyBtn.textContent = 'Copy Text';
                         copyBtn.className = 'button copy-button';
                         copyBtn.addEventListener('click', () => {
-                            navigator.clipboard.writeText(data.content).then(() => {
+                            copyShareCodeToClipboard(data.content, null, () => {
                                 copyBtn.textContent = 'Copied!';
                                 setTimeout(() => { copyBtn.textContent = 'Copy Text'; }, 2000);
                             });
@@ -2160,7 +2310,7 @@
                     // 🧩 SINGLE FILE
                     else if (data.type === 'file') {
                         const fileUrl = `${API_BASE_URL}/get/${data.filename}`;
-                        renderFilePreview(data.filename, fileUrl, showInitialView);
+                        renderFilePreview(data.filename, fileUrl, showInitialView, code);
                     }
 
                 } catch (error) {
